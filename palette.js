@@ -64,7 +64,7 @@ app.directive('colorPalette', function()
 
 				'void main(void)',
 				'{',
-					'mat3 xform = mat3(0.5, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 1.0);',
+					'mat3 xform = mat3(0.575, 0.0, 0.0, 0.0, 0.5, 0.0, 0.575, 0.5, 1.0);',
 					'windowPosition = (xform * vec3(vertPosition.xy, 1.0)).xy;',
 					'gl_Position = vec4(vertPosition,1);',
 				'}'].join('\n')
@@ -90,10 +90,12 @@ app.directive('colorPalette', function()
 				'}',
 
 				'void main(void){',
-					'if( windowPosition.x < 0.9 )',
+					'if( windowPosition.x < 1.0 )',
 						'gl_FragColor = vec4( hsv2rgb(windowPosition.x, windowPosition.y, selectedColor.z), 1.0);',
-					'else',
+					'else if(windowPosition.x > 1.05)',
 						'gl_FragColor = vec4( hsv2rgb(selectedColor.x, selectedColor.y, windowPosition.y), 1.0);',
+					'else',
+						'discard;',
 				'}'
 				].join('\n')
 			);
@@ -127,6 +129,7 @@ app.directive('colorPalette', function()
 
 			var selectionUniform = gl.getUniformLocation(program, 'selectedColor');
 
+			gl.clearColor(1.0, 1.0, 1.0, 0.0);
 
 
 			var oneaxis = elem[0].querySelector('canvas.oneaxis');
