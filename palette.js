@@ -38,6 +38,28 @@ app.directive('colorPalette', function()
 		return 'rgb('+Math.round(r*255)+','+Math.round(g*255)+','+Math.round(b*255)+')';
 	}
 
+	function rgbToHsv(r, g, b)
+	{
+		var max = Math.max(r, g, b), min = Math.min(r, g, b);
+		var h, s, v = max;
+		var d = max - min;
+		s = max === 0 ? 0 : d/max;
+
+		if(max == min){
+			h = 0;
+		}
+		else {
+			switch(max){
+				case r: h = (g-b)/d + (g<b ? 6 : 0); break;
+				case g: h = (b-r)/d + 2; break;
+				case b: h = (r-g)/d + 4; break;
+			}
+			h /= 6;
+		}
+
+		return {h: h, s: s, v: v};
+	}
+
 	return {
 		restrict: 'E',
 		template: '<div class="palette">'+
@@ -54,7 +76,7 @@ app.directive('colorPalette', function()
 			$scope.selection = {h: 0, s: 1, v: 0.8};
 
 			var canvas = elem[0].querySelector('canvas');
-			var gl = canvas.getContext('webgl');
+			var gl = canvas.getContext('webgl', {preserveDrawingBuffer: true});
 
 			var style = window.getComputedStyle(elem[0].querySelector('.palette'));
 			var w = parseInt(style.width), h = parseInt(style.height);
@@ -103,9 +125,8 @@ app.directive('colorPalette', function()
 					'return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);',
 				'}',
 
-				'vec4 getSelectionColor(vec4 baseColor)',
-				'{',
-					'return vec4( fract(baseColor.x+0.5), 1.0, 1.0, 1.0);',
+				'vec4 getSelectionColor(vec4 baseColor){',
+					'return vec4( vec3(1.0)-baseColor.rgb, baseColor.a );',
 				'}',
 
 				'void main(void){',
@@ -115,15 +136,17 @@ app.directive('colorPalette', function()
 						'vec4 color = vec4(xPercent, windowPosition.y, selectedColor.z, 1.0);',
 						'float radius = abs( sqrt(pow(xPercent-selectedColor.x,2.0) + pow((windowPosition.y-selectedColor.y)/aspect,2.0)) );',
 						'if( radius < 0.020 && radius > 0.015 )',
-							'color = getSelectionColor(color);',
-						'gl_FragColor = vec4(hsv2rgb(color.x, color.y, color.z), 1.0);',
+							'gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.x, color.y, color.z), 1.0 ));',
+						'else',
+							'gl_FragColor = vec4( hsv2rgb(color.x, color.y, color.z), 1.0);',
 					'}',
 					'else if(windowPosition.x > 1.0-swatchPercent)',
 					'{',
 						'vec4 color = vec4( selectedColor.x, selectedColor.y, windowPosition.y, 1.0);',
 						'if( abs(windowPosition.y-selectedColor.z) < 0.005 )',
-							'color = getSelectionColor(color);',
-						'gl_FragColor = vec4( hsv2rgb(color.x, color.y, color.z), 1.0);',
+							'gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.x, color.y, color.z), 1.0 ));',
+						'else',
+							'gl_FragColor = vec4( hsv2rgb(color.x, color.y, color.z), 1.0);',
 					'}',
 					'else',
 						'gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );',
@@ -158,6 +181,7 @@ app.directive('colorPalette', function()
 				 1.0,  1.0, 0.0
 			]), gl.STATIC_DRAW);
 
+
 			var selectionUniform = gl.getUniformLocation(program, 'selectedColor');
 			var swatchUniform = gl.getUniformLocation(program, 'swatchPercent');
 			gl.uniform1f(swatchUniform, 20/w);
@@ -189,18 +213,36 @@ app.directive('colorPalette', function()
 			}
 
 			var twoaxis_tracking = false;
-			twoaxis.onmousedown = function(evt){
+			twoaxis.onmousedown = function(evt)
+			{
 				twoaxis_tracking = true;
-				$scope.selection.h = evt.offsetX/(paletteWidth-1);
-				$scope.selection.s = (h-evt.offsetY-1)/(h-1);
+
+				var arb = new Uint8Array(4);
+				gl.readPixels(evt.offsetX, h-evt.offsetY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, arb);
+
+				$scope.selection.r = arb[0];
+				$scope.selection.g = arb[1];
+				$scope.selection.b = arb[2];
+
+				var hsv = rgbToHsv(arb[0], arb[1], arb[2]);
+				$scope.selection.h = hsv.h;
+				$scope.selection.s = hsv.s;
 				$scope.$apply();
 			}
 
 			twoaxis.onmousemove = function(evt){
 				if(twoaxis_tracking)
 				{
-					$scope.selection.h = evt.offsetX/(paletteWidth-1);
-					$scope.selection.s = (h-evt.offsetY-1)/(h-1);
+					var arb = new Uint8Array(4);
+					gl.readPixels(evt.offsetX, h-evt.offsetY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, arb);
+
+					$scope.selection.r = arb[0];
+					$scope.selection.g = arb[1];
+					$scope.selection.b = arb[2];
+
+					var hsv = rgbToHsv(arb[0], arb[1], arb[2]);
+					$scope.selection.h = hsv.h;
+					$scope.selection.s = hsv.s;
 					$scope.$apply();
 				}
 			}
