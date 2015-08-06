@@ -40,21 +40,30 @@ app.directive('colorPalette', function()
 
 	return {
 		restrict: 'E',
-		template: '<canvas class="twoaxis" width="{{width}}" height="{{height}}"></canvas>'+
-			'<canvas class="oneaxis" width="1" height="{{height}}"></canvas>'+
-			'<div class="colorswatch"></div>',
-		scope: {
-			width: '=',
-			height: '='
-		},
+		template: '<div class="palette">'+
+			'<canvas></canvas>'+
+			'<div class="twoaxis"></div>'+
+			'<div class="oneaxis"></div>'+
+		'</div>'+
+		'<div class="controls">'+
+			'<div class="colorswatch"></div>'+
+		'</div>',
+		scope: {},
 		link: function($scope, elem, attrs)
 		{
 			$scope.selection = {h: 0, s: 1, v: 0.8};
 
-			var twoaxis = elem[0].querySelector('canvas.twoaxis');
-			var gl = twoaxis.getContext('webgl');
+			var canvas = elem[0].querySelector('canvas');
+			var gl = canvas.getContext('webgl');
 
-			gl.viewport(0, 0, $scope.width, $scope.height);
+			var style = window.getComputedStyle(elem[0].querySelector('.palette'));
+			var w = parseInt(style.width), h = parseInt(style.height);
+			canvas.width = w;
+			canvas.height = h;
+			gl.viewport(0, 0, w, h);
+
+			var paletteWidth = w-30;
+			elem[0].querySelector('.twoaxis').style.width = paletteWidth + 'px';
 
 			var vert = gl.createShader(gl.VERTEX_SHADER);
 			gl.shaderSource(vert, [
@@ -64,7 +73,7 @@ app.directive('colorPalette', function()
 
 				'void main(void)',
 				'{',
-					'mat3 xform = mat3(0.575, 0.0, 0.0, 0.0, 0.5, 0.0, 0.575, 0.5, 1.0);',
+					'mat3 xform = mat3(0.5, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 1.0);',
 					'windowPosition = (xform * vec3(vertPosition.xy, 1.0)).xy;',
 					'gl_Position = vec4(vertPosition,1);',
 				'}'].join('\n')
@@ -81,6 +90,8 @@ app.directive('colorPalette', function()
 				'precision lowp float;',
 				'varying vec2 windowPosition;',
 				'uniform vec3 selectedColor;'+
+				'uniform float swatchPercent;'+
+				'uniform float marginPercent;'+
 
 				'vec3 hsv2rgb(float h, float s, float v){',
 					'vec3 c = vec3(h,s,v);',
@@ -90,12 +101,12 @@ app.directive('colorPalette', function()
 				'}',
 
 				'void main(void){',
-					'if( windowPosition.x < 1.0 )',
-						'gl_FragColor = vec4( hsv2rgb(windowPosition.x, windowPosition.y, selectedColor.z), 1.0);',
-					'else if(windowPosition.x > 1.05)',
+					'if( windowPosition.x < (1.0 - swatchPercent - marginPercent) )',
+						'gl_FragColor = vec4( hsv2rgb(windowPosition.x/(1.0-swatchPercent-marginPercent), windowPosition.y, selectedColor.z), 1.0);',
+					'else if(windowPosition.x > 1.0-swatchPercent)',
 						'gl_FragColor = vec4( hsv2rgb(selectedColor.x, selectedColor.y, windowPosition.y), 1.0);',
 					'else',
-						'discard;',
+						'gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );',
 				'}'
 				].join('\n')
 			);
@@ -128,17 +139,20 @@ app.directive('colorPalette', function()
 			]), gl.STATIC_DRAW);
 
 			var selectionUniform = gl.getUniformLocation(program, 'selectedColor');
+			var swatchUniform = gl.getUniformLocation(program, 'swatchPercent');
+			gl.uniform1f(swatchUniform, 20/w);
+			var marginUniform = gl.getUniformLocation(program, 'marginPercent');
+			gl.uniform1f(marginUniform, 10/w);
 
 			gl.clearColor(1.0, 1.0, 1.0, 0.0);
 
 
-			var oneaxis = elem[0].querySelector('canvas.oneaxis');
-			//var oneaxis_ctx = oneaxis.getContext('2d');
+			var oneaxis = elem[0].querySelector('.oneaxis');
+			var twoaxis = elem[0].querySelector('.twoaxis');
 
 			$scope.$watch('width && height', redraw3d);
 
 			$scope.$watch('selection.h + selection.s + selection.v', function(){
-				//redraw2d(1);
 				gl.uniform3f(selectionUniform, $scope.selection.h, $scope.selection.s, $scope.selection.v);
 				redraw3d();
 				elem[0].querySelector('.colorswatch').style['background-color'] = convert($scope.selection.h, $scope.selection.s, $scope.selection.v);
@@ -152,39 +166,19 @@ app.directive('colorPalette', function()
 				gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 			}
 
-			function redraw2d(axis)
-			{
-				var w = $scope.width, h = $scope.height;
-				for(var y=0; y<h; y++)
-				{
-					if(axis != 1){
-						for(var x=0; x<w; x++)
-						{
-							twoaxis_ctx.fillStyle = convert(x/w, (h-y-1)/h, $scope.selection.v);
-							twoaxis_ctx.fillRect(x,y,1,1);
-						}
-					}
-
-					if(axis != 2){
-						oneaxis_ctx.fillStyle = convert($scope.selection.h, $scope.selection.s, (h-y-1)/h);
-						oneaxis_ctx.fillRect(0,y,1,1);
-					}
-				}
-			}
-
 			var twoaxis_tracking = false;
 			twoaxis.onmousedown = function(evt){
 				twoaxis_tracking = true;
-				$scope.selection.h = evt.clientX/($scope.width-1);
-				$scope.selection.s = ($scope.height-evt.clientY-1)/($scope.height-1);
+				$scope.selection.h = evt.clientX/(paletteWidth-1);
+				$scope.selection.s = (h-evt.clientY-1)/(h-1);
 				$scope.$apply();
 			}
 
 			twoaxis.onmousemove = function(evt){
 				if(twoaxis_tracking)
 				{
-					$scope.selection.h = evt.clientX/($scope.width-1);
-					$scope.selection.s = ($scope.height-evt.clientY-1)/($scope.height-1);
+					$scope.selection.h = evt.clientX/(paletteWidth-1);
+					$scope.selection.s = (h-evt.clientY-1)/(h-1);
 					$scope.$apply();
 				}
 			}
@@ -196,14 +190,14 @@ app.directive('colorPalette', function()
 			var oneaxis_tracking = false;
 			oneaxis.onmousedown = function(evt){
 				oneaxis_tracking = true;
-				$scope.selection.v = ($scope.height-evt.clientY-1)/($scope.height-1);
+				$scope.selection.v = (h-evt.clientY-1)/(h-1);
 				$scope.$apply();
 			}
 
 			oneaxis.onmousemove = function(evt){
 				if(oneaxis_tracking)
 				{
-					$scope.selection.v = ($scope.height-evt.clientY-1)/($scope.height-1);
+					$scope.selection.v = (h-evt.clientY-1)/(h-1);
 					$scope.$apply();
 				}
 			}

@@ -1,0 +1,40 @@
+/* line 2, palette.scss */
+color-palette {
+  width: 350px;
+  height: 300px;
+  border: solid grey 1px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box; }
+  /* line 13, palette.scss */
+  color-palette .palette {
+    position: relative;
+    margin: 8px;
+    padding: 1px;
+    flex-grow: 1; }
+    /* line 20, palette.scss */
+    color-palette .palette .twoaxis, color-palette .palette .oneaxis {
+      position: absolute;
+      cursor: crosshair;
+      border: solid grey 1px; }
+    /* line 26, palette.scss */
+    color-palette .palette .twoaxis {
+      top: 0px;
+      left: 0px;
+      height: 99%; }
+    /* line 32, palette.scss */
+    color-palette .palette .oneaxis {
+      top: 0px;
+      right: 0px;
+      width: 20px;
+      height: 99%;
+      margin-left: 10px; }
+  /* line 43, palette.scss */
+  color-palette .controls {
+    margin: 8px;
+    height: 50px;
+    flex-shrink: 0; }
+    /* line 49, palette.scss */
+    color-palette .controls .colorswatch {
+      width: 50px;
+      height: 50px; }

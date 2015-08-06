@@ -3,29 +3,9 @@
 	<head>
 		<script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.min.js'></script>
 		<script src='palette.js'></script>
-		<style>
-
-			color-palette .twoaxis {
-				cursor: crosshair;
-			}
-
-			color-palette .oneaxis {
-				border: solid grey 1px;
-				cursor: crosshair;
-				margin-left: 10px;
-
-				height: 300px;
-				width: 20px;
-			}
-
-			color-palette .colorswatch {
-				width: 50px;
-				height: 50px;
-			}
-
-		</style>
+		<link rel='stylesheet' href='palette.css'/>
 	</head>
 	<body ng-app='palette'>
-		<color-palette width=350 height=300></color-palette>
+		<color-palette></color-palette>
 	</body>
 </html>
