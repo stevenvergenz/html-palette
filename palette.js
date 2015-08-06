@@ -41,7 +41,7 @@ app.directive('colorPalette', function()
 	function rgbToHsv(r, g, b)
 	{
 		var max = Math.max(r, g, b), min = Math.min(r, g, b);
-		var h, s, v = max;
+		var h, s, v = max/255;
 		var d = max - min;
 		s = max === 0 ? 0 : d/max;
 
@@ -227,7 +227,9 @@ app.directive('colorPalette', function()
 				var hsv = rgbToHsv(arb[0], arb[1], arb[2]);
 				$scope.selection.h = hsv.h;
 				$scope.selection.s = hsv.s;
+				//$scope.selection.v = hsv.v;
 				$scope.$apply();
+				console.log(arb, hsv);
 			}
 
 			twoaxis.onmousemove = function(evt){
@@ -243,7 +245,9 @@ app.directive('colorPalette', function()
 					var hsv = rgbToHsv(arb[0], arb[1], arb[2]);
 					$scope.selection.h = hsv.h;
 					$scope.selection.s = hsv.s;
+					//$scope.selection.v = hsv.v;
 					$scope.$apply();
+					console.log(arb, hsv);
 				}
 			}
 
