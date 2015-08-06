@@ -64,6 +64,8 @@ app.directive('colorPalette', function()
 
 			var paletteWidth = w-30;
 			elem[0].querySelector('.twoaxis').style.width = paletteWidth + 'px';
+			elem[0].querySelector('.twoaxis').style.height = h + 'px';
+			elem[0].querySelector('.oneaxis').style.height = h + 'px';
 
 			var vert = gl.createShader(gl.VERTEX_SHADER);
 			gl.shaderSource(vert, [
@@ -89,9 +91,10 @@ app.directive('colorPalette', function()
 			gl.shaderSource(frag, [
 				'precision lowp float;',
 				'varying vec2 windowPosition;',
-				'uniform vec3 selectedColor;'+
-				'uniform float swatchPercent;'+
-				'uniform float marginPercent;'+
+				'uniform vec3 selectedColor;',
+				'uniform float swatchPercent;',
+				'uniform float marginPercent;',
+				'uniform float aspect;',
 
 				'vec3 hsv2rgb(float h, float s, float v){',
 					'vec3 c = vec3(h,s,v);',
@@ -100,11 +103,28 @@ app.directive('colorPalette', function()
 					'return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);',
 				'}',
 
+				'vec4 getSelectionColor(vec4 baseColor)',
+				'{',
+					'return vec4( fract(baseColor.x+0.5), 1.0, 1.0, 1.0);',
+				'}',
+
 				'void main(void){',
-					'if( windowPosition.x < (1.0 - swatchPercent - marginPercent) )',
-						'gl_FragColor = vec4( hsv2rgb(windowPosition.x/(1.0-swatchPercent-marginPercent), windowPosition.y, selectedColor.z), 1.0);',
+					'float xPercent = windowPosition.x / (1.0 - swatchPercent - marginPercent);',
+					'if( xPercent <= 1.0 )',
+					'{',
+						'vec4 color = vec4(xPercent, windowPosition.y, selectedColor.z, 1.0);',
+						'float radius = abs( sqrt(pow(xPercent-selectedColor.x,2.0) + pow((windowPosition.y-selectedColor.y)/aspect,2.0)) );',
+						'if( radius < 0.020 && radius > 0.015 )',
+							'color = getSelectionColor(color);',
+						'gl_FragColor = vec4(hsv2rgb(color.x, color.y, color.z), 1.0);',
+					'}',
 					'else if(windowPosition.x > 1.0-swatchPercent)',
-						'gl_FragColor = vec4( hsv2rgb(selectedColor.x, selectedColor.y, windowPosition.y), 1.0);',
+					'{',
+						'vec4 color = vec4( selectedColor.x, selectedColor.y, windowPosition.y, 1.0);',
+						'if( abs(windowPosition.y-selectedColor.z) < 0.005 )',
+							'color = getSelectionColor(color);',
+						'gl_FragColor = vec4( hsv2rgb(color.x, color.y, color.z), 1.0);',
+					'}',
 					'else',
 						'gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );',
 				'}'
@@ -143,6 +163,8 @@ app.directive('colorPalette', function()
 			gl.uniform1f(swatchUniform, 20/w);
 			var marginUniform = gl.getUniformLocation(program, 'marginPercent');
 			gl.uniform1f(marginUniform, 10/w);
+			var aspectUniform = gl.getUniformLocation(program, 'aspect');
+			gl.uniform1f(aspectUniform, w/h);
 
 			gl.clearColor(1.0, 1.0, 1.0, 0.0);
 
@@ -169,16 +191,16 @@ app.directive('colorPalette', function()
 			var twoaxis_tracking = false;
 			twoaxis.onmousedown = function(evt){
 				twoaxis_tracking = true;
-				$scope.selection.h = evt.clientX/(paletteWidth-1);
-				$scope.selection.s = (h-evt.clientY-1)/(h-1);
+				$scope.selection.h = evt.offsetX/(paletteWidth-1);
+				$scope.selection.s = (h-evt.offsetY-1)/(h-1);
 				$scope.$apply();
 			}
 
 			twoaxis.onmousemove = function(evt){
 				if(twoaxis_tracking)
 				{
-					$scope.selection.h = evt.clientX/(paletteWidth-1);
-					$scope.selection.s = (h-evt.clientY-1)/(h-1);
+					$scope.selection.h = evt.offsetX/(paletteWidth-1);
+					$scope.selection.s = (h-evt.offsetY-1)/(h-1);
 					$scope.$apply();
 				}
 			}
@@ -190,14 +212,14 @@ app.directive('colorPalette', function()
 			var oneaxis_tracking = false;
 			oneaxis.onmousedown = function(evt){
 				oneaxis_tracking = true;
-				$scope.selection.v = (h-evt.clientY-1)/(h-1);
+				$scope.selection.v = (h-evt.offsetY-1)/(h-1);
 				$scope.$apply();
 			}
 
 			oneaxis.onmousemove = function(evt){
 				if(oneaxis_tracking)
 				{
-					$scope.selection.v = (h-evt.clientY-1)/(h-1);
+					$scope.selection.v = (h-evt.offsetY-1)/(h-1);
 					$scope.$apply();
 				}
 			}
