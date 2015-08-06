@@ -6,10 +6,10 @@ var app = angular.module('palette', []);
 app.directive('colorPalette', function()
 {
 	// h, s, v [0,1]
-	function convert(h,s,v)
+	function hsvToRgb(h,s,v)
 	{
 		if( s === 0 ){
-			return composeRGB(v,v,v);
+			return {r: v, g: v, b: v};
 		}
 
 		var i = Math.floor(h*6);
@@ -20,50 +20,25 @@ app.directive('colorPalette', function()
 
 		switch(i%6){
 		case 0:
-			return composeRGB(v,t,p);
+			return {r:v,g:t,b:p};
 		case 1:
-			return composeRGB(q,v,p);
+			return {r:q,g:v,b:p};
 		case 2:
-			return composeRGB(p,v,t);
+			return {r:p,g:v,b:t};
 		case 3:
-			return composeRGB(p,q,v);
+			return {r:p,g:q,b:v};
 		case 4:
-			return composeRGB(t,p,v);
+			return {r:t,g:p,b:v};
 		case 5:
-			return composeRGB(v,p,q);
+			return {r:v,g:p,b:q};
 		}
 	}
 
-	function composeRGB(r,g,b){
-		return 'rgb('+Math.round(r*255)+','+Math.round(g*255)+','+Math.round(b*255)+')';
-	}
-
-	function rgbToHsv(r, g, b)
-	{
-		var max = Math.max(r, g, b), min = Math.min(r, g, b);
-		var h, s, v = max/255;
-		var d = max - min;
-		s = max === 0 ? 0 : d/max;
-
-		if(max == min){
-			h = 0;
-		}
-		else {
-			switch(max){
-				case r: h = (g-b)/d + (g<b ? 6 : 0); break;
-				case g: h = (b-r)/d + 2; break;
-				case b: h = (r-g)/d + 4; break;
-			}
-			h /= 6;
-		}
-
-		return {h: h, s: s, v: v};
-	}
-
+	
 	return {
 		restrict: 'E',
 		template: '<div class="palette">'+
-			'<canvas></canvas>'+
+			'<canvas width="1" height="1"></canvas>'+
 			'<div class="twoaxis"></div>'+
 			'<div class="oneaxis"></div>'+
 		'</div>'+
@@ -79,7 +54,7 @@ app.directive('colorPalette', function()
 			var gl = canvas.getContext('webgl', {preserveDrawingBuffer: true});
 
 			var style = window.getComputedStyle(elem[0].querySelector('.palette'));
-			var w = parseInt(style.width), h = parseInt(style.height);
+			var w = parseInt(style.width), h = parseInt(style.height)-1;
 			canvas.width = w;
 			canvas.height = h;
 			gl.viewport(0, 0, w, h);
@@ -198,10 +173,17 @@ app.directive('colorPalette', function()
 
 			$scope.$watch('width && height', redraw3d);
 
-			$scope.$watch('selection.h + selection.s + selection.v', function(){
+			$scope.$watch('selection.h + selection.s + selection.v', function()
+			{
 				gl.uniform3f(selectionUniform, $scope.selection.h, $scope.selection.s, $scope.selection.v);
 				redraw3d();
-				elem[0].querySelector('.colorswatch').style['background-color'] = convert($scope.selection.h, $scope.selection.s, $scope.selection.v);
+
+				var rgb = hsvToRgb($scope.selection.h, $scope.selection.s, $scope.selection.v);
+				$scope.selection.r = rgb.r;
+				$scope.selection.g = rgb.g;
+				$scope.selection.b = rgb.b;
+
+				elem[0].querySelector('.colorswatch').style['background-color'] = 'rgb('+Math.round(rgb.r*255)+','+Math.round(rgb.g*255)+','+Math.round(rgb.b*255)+')';
 			});
 
 			function redraw3d()
@@ -217,37 +199,17 @@ app.directive('colorPalette', function()
 			{
 				twoaxis_tracking = true;
 
-				var arb = new Uint8Array(4);
-				gl.readPixels(evt.offsetX, h-evt.offsetY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, arb);
-
-				$scope.selection.r = arb[0];
-				$scope.selection.g = arb[1];
-				$scope.selection.b = arb[2];
-
-				var hsv = rgbToHsv(arb[0], arb[1], arb[2]);
-				$scope.selection.h = hsv.h;
-				$scope.selection.s = hsv.s;
-				//$scope.selection.v = hsv.v;
+				$scope.selection.h = (evt.offsetX-1)/(paletteWidth);
+				$scope.selection.s = (h-evt.offsetY+1)/(h-1);
 				$scope.$apply();
-				console.log(arb, hsv);
 			}
 
 			twoaxis.onmousemove = function(evt){
 				if(twoaxis_tracking)
 				{
-					var arb = new Uint8Array(4);
-					gl.readPixels(evt.offsetX, h-evt.offsetY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, arb);
-
-					$scope.selection.r = arb[0];
-					$scope.selection.g = arb[1];
-					$scope.selection.b = arb[2];
-
-					var hsv = rgbToHsv(arb[0], arb[1], arb[2]);
-					$scope.selection.h = hsv.h;
-					$scope.selection.s = hsv.s;
-					//$scope.selection.v = hsv.v;
+					$scope.selection.h = (evt.offsetX-1)/(paletteWidth);
+					$scope.selection.s = (h-evt.offsetY+1)/(h-1);
 					$scope.$apply();
-					console.log(arb, hsv);
 				}
 			}
 

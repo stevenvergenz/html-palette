@@ -1,18 +1,18 @@
-/* line 2, palette.scss */
+/* line 1, palette.scss */
 color-palette {
   width: 350px;
   height: 300px;
   border: solid grey 1px;
+  padding: 5px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box; }
   /* line 13, palette.scss */
   color-palette .palette {
     position: relative;
-    margin: 8px;
     padding: 1px;
     flex-grow: 1; }
-    /* line 20, palette.scss */
+    /* line 19, palette.scss */
     color-palette .palette .twoaxis, color-palette .palette .oneaxis {
       position: absolute;
       border: solid grey 1px; }
@@ -28,12 +28,13 @@ color-palette {
       width: 20px;
       margin-left: 10px;
       cursor: ns-resize; }
-  /* line 42, palette.scss */
+  /* line 41, palette.scss */
   color-palette .controls {
-    margin: 8px;
-    height: 50px;
+    height: 15%;
     flex-shrink: 0; }
-    /* line 48, palette.scss */
+    /* line 47, palette.scss */
     color-palette .controls .colorswatch {
-      width: 50px;
-      height: 50px; }
+      width: 25%;
+      height: 100%; }
+
+/*# sourceMappingURL=palette.css.map */
