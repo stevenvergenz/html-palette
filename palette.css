@@ -1,5 +1,5 @@
-/* line 1, palette.scss */
-color-palette {
+/* line 2, palette.scss */
+html-palette {
   width: 350px;
   height: 300px;
   border: solid grey 1px;
@@ -7,34 +7,32 @@ color-palette {
   display: flex;
   flex-direction: column;
   box-sizing: border-box; }
-  /* line 13, palette.scss */
-  color-palette .palette {
+  /* line 14, palette.scss */
+  html-palette .palette {
     position: relative;
     padding: 1px;
     flex-grow: 1; }
-    /* line 19, palette.scss */
-    color-palette .palette .twoaxis, color-palette .palette .oneaxis {
+    /* line 20, palette.scss */
+    html-palette .palette .twoaxis, html-palette .palette .oneaxis {
       position: absolute;
       border: solid grey 1px; }
     /* line 25, palette.scss */
-    color-palette .palette .twoaxis {
+    html-palette .palette .twoaxis {
       top: 0px;
       left: 0px;
       cursor: crosshair; }
     /* line 31, palette.scss */
-    color-palette .palette .oneaxis {
+    html-palette .palette .oneaxis {
       top: 0px;
       right: 0px;
       width: 20px;
       margin-left: 10px;
       cursor: ns-resize; }
-  /* line 41, palette.scss */
-  color-palette .controls {
+  /* line 42, palette.scss */
+  html-palette .controls {
     height: 15%;
     flex-shrink: 0; }
-    /* line 47, palette.scss */
-    color-palette .controls .colorswatch {
+    /* line 48, palette.scss */
+    html-palette .controls .colorswatch {
       width: 25%;
       height: 100%; }
-
-/*# sourceMappingURL=palette.css.map */
