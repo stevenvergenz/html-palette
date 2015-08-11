@@ -62,7 +62,7 @@
 		'</div>',
 		'<div class="controls">',
 			'<div class="rgbInput">',
-				'<span class="r"></span>',
+				'<span class="r" draggable="true"></span>',
 				'<span class="g"></span>',
 				'<span class="b"></span>',
 			'</div>',
@@ -248,7 +248,28 @@
 			oneaxis_tracking = false;
 		}
 
+		
+		var r = elem.querySelector('.r');
+		var g = elem.querySelector('.g');
+		var b = elem.querySelector('.b');
 
+		var initialR = 0, initialMouse = 0;
+
+		r.ondragstart = function(evt){
+			initialR = Math.round(self.selection.r*255);
+			initialMouse = evt.offsetY;
+		}
+		r.ondrag = function(evt){
+			evt.preventDefault();
+			console.log(evt.offsetY);
+			var newR = initialR + initialMouse-evt.offsetY;
+			newR = Math.max(Math.min(newR, 255), 0);
+			console.log(newR);
+			self.color({r: newR/255});
+		}
+		r.ondragend = function(evt){
+			evt.preventDefault();
+		}
 	}
 
 	Palette.prototype.redraw = function()
@@ -286,7 +307,7 @@
 			if(val.g) this.selection.g = val.g;
 			if(val.b) this.selection.b = val.b;
 
-			var hsv = rgbToHsv(val.r, val.g, val.b);
+			var hsv = rgbToHsv(this.selection.r, this.selection.g, this.selection.b);
 			this.selection.h = hsv.h;
 			this.selection.s = hsv.s;
 			this.selection.v = hsv.v;
