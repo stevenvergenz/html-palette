@@ -31,8 +31,15 @@ html-palette {
   /* line 42, palette.scss */
   html-palette .controls {
     height: 15%;
-    flex-shrink: 0; }
-    /* line 48, palette.scss */
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch; }
+    /* line 50, palette.scss */
+    html-palette .controls .rgbInput {
+      width: 75%;
+      flex-grow: 1; }
+    /* line 56, palette.scss */
     html-palette .controls .colorswatch {
       width: 25%;
-      height: 100%; }
+      flex-shrink: 0; }

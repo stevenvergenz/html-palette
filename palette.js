@@ -26,9 +26,32 @@
 			return {r:p,g:q,b:v};
 		case 4:
 			return {r:t,g:p,b:v};
-		case 5:
+		default:
 			return {r:v,g:p,b:q};
 		}
+	}
+
+	function rgbToHsv(r,g,b)
+	{
+		var max = Math.max(r, g, b), min = Math.min(r, g, b);
+	    var h, s, v = max;
+
+	    var d = max - min;
+	    s = max === 0 ? 0 : d / max;
+
+	    if(max == min) {
+	        h = 0; // achromatic
+	    }
+	    else {
+	        switch(max) {
+	            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+	            case g: h = (b - r) / d + 2; break;
+	            case b: h = (r - g) / d + 4; break;
+	        }
+	        h /= 6;
+	    }
+
+	    return { h: h, s: s, v: v };
 	}
 
 	var template = [
@@ -38,6 +61,11 @@
 			'<div class="oneaxis"></div>',
 		'</div>',
 		'<div class="controls">',
+			'<div class="rgbInput">',
+				'<span class="r"></span>',
+				'<span class="g"></span>',
+				'<span class="b"></span>',
+			'</div>',
 			'<div class="colorswatch"></div>',
 		'</div>'
 	].join('');
@@ -235,47 +263,129 @@
 	{
 		if(val && (val.h || val.s || val.v))
 		{
-			if(val.h) this.selection.h = val.h;
-			if(val.s) this.selection.s = val.s;
-			if(val.v) this.selection.v = val.v;
+			this.selection.h = val.h || this.selection.h || 1;
+			this.selection.s = val.s || this.selection.s || 1;
+			this.selection.v = val.v || this.selection.v || 1;
 			this.redraw();
 
 			var rgb = hsvToRgb(this.selection.h, this.selection.s, this.selection.v);
-			this.selection.r = rgb.r;
-			this.selection.g = rgb.g;
-			this.selection.b = rgb.b;
+			this.selection.r = Math.max(rgb.r, 0);
+			this.selection.g = Math.max(rgb.g, 0);
+			this.selection.b = Math.max(rgb.b, 0);
+
+			this.selection.hex =
+				('00'+Math.round(this.selection.r*255).toString(16)).slice(-2)
+				+('00'+Math.round(this.selection.g*255).toString(16)).slice(-2)
+				+('00'+Math.round(this.selection.b*255).toString(16)).slice(-2)
+
+			if(this.colorCallback) this.colorCallback(this.selection);
+		}
+		else if(val && (val.r || val.g || val.b))
+		{
+			if(val.r) this.selection.r = val.r;
+			if(val.g) this.selection.g = val.g;
+			if(val.b) this.selection.b = val.b;
+
+			var hsv = rgbToHsv(val.r, val.g, val.b);
+			this.selection.h = hsv.h;
+			this.selection.s = hsv.s;
+			this.selection.v = hsv.v;
+			this.redraw();
+
+			this.selection.hex =
+				('00'+Math.round(this.selection.r*255).toString(16)).slice(-2)
+				+('00'+Math.round(this.selection.g*255).toString(16)).slice(-2)
+				+('00'+Math.round(this.selection.b*255).toString(16)).slice(-2)
+
+			if(this.colorCallback) this.colorCallback(this.selection);
+		}
+		else if( /^[0-9A-Fa-f]{6}$/.test(val) )
+		{
+			this.selection.hex = val;
+
+			val = parseInt(val, 16);
+			this.selection.r = ((val & 0xff0000) >> 16) / 255;
+			this.selection.g = ((val & 0x00ff00) >> 8) / 255;
+			this.selection.b = (val & 0x0000ff) / 255;
+
+			var hsv = rgbToHsv(this.selection.r, this.selection.g, this.selection.b);
+			this.selection.h = hsv.h;
+			this.selection.s = hsv.s;
+			this.selection.v = hsv.v;
+			this.redraw();
+
+			if(this.colorCallback) this.colorCallback(this.selection);
 		}
 
-		this.elem.querySelector('.colorswatch').style['background-color'] = 
-			'rgb('
-				+Math.round(this.selection.r*255)+','
-				+Math.round(this.selection.g*255)+','
-				+Math.round(this.selection.b*255)
-			+')';
+		this.elem.querySelector('.rgbInput .r').innerHTML = this.selection.hex.slice(0,2);
+		this.elem.querySelector('.rgbInput .g').innerHTML = this.selection.hex.slice(2,4);
+		this.elem.querySelector('.rgbInput .b').innerHTML = this.selection.hex.slice(4,6);
+		this.elem.querySelector('.colorswatch').style['background-color'] = '#'+this.selection.hex;
 	}
 
-	var app = angular.module('html-palette', []);
-
-	app.directive('htmlPalette', function()
+	Palette.prototype.setColorCallback = function(cb)
 	{
-		return {
-			restrict: 'E',
-			template: template,
-			scope: {
-			},
-			link: function($scope, elem, attrs)
-			{
-				var palette = new Palette(elem[0]);
-				palette.redraw();
+		this.colorCallback = cb;
+	}
 
-				/*$scope.$watch('selection.h + selection.s + selection.v', function()
+	if(angular)
+	{
+		var app = angular.module('html-palette', []);
+
+		app.directive('htmlPalette', function()
+		{
+			return {
+				restrict: 'E',
+				template: template,
+				scope: {
+					hsvColor: '=',
+					rgbColor: '=',
+					hexColor: '='
+				},
+				link: function($scope, elem, attrs)
 				{
+					var palette = new Palette(elem[0]);
 
-					elem[0].querySelector('.colorswatch').style['background-color'] = 'rgb('+Math.round(rgb.r*255)+','+Math.round(rgb.g*255)+','+Math.round(rgb.b*255)+')';
-				});*/
+					$scope.$watch('hsvColor', function(newval)
+					{
+						if(newval){
+							palette.setColorCallback(function(color){
+								$scope.hsvColor.h = color.h;
+								$scope.hsvColor.s = color.s;
+								$scope.hsvColor.v = color.v;
+							});
+							palette.color({h:newval.h, s:newval.s, v:newval.v});
+						}
+					});
 
-			}
-		};
-	});
+					$scope.$watch('rgbColor', function(newval)
+					{
+						if(newval){
+							palette.setColorCallback(function(color){
+								$scope.rgbColor.r = color.r;
+								$scope.rgbColor.g = color.g;
+								$scope.rgbColor.b = color.b;
+							});
+							palette.color({r:newval.r, g:newval.g, b:newval.b});
+						}
+					});
+
+					$scope.$watch('hexColor', function(newval)
+					{
+						if(newval){
+							palette.setColorCallback(function(color){
+								$scope.hexColor = color.hex;
+							});
+							palette.color(newval);
+						}
+					});
+
+					palette.redraw();
+
+					window.palette = palette;
+				}
+			};
+		});
+	}
 
 })(window.jQuery, window.angular);
