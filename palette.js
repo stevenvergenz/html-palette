@@ -89,7 +89,7 @@
 		'uniform vec3 selectedColor;',
 		'uniform float swatchPercent;',
 		'uniform float marginPercent;',
-		'uniform float aspect;',
+		'uniform vec2 windowDimensions;',
 
 		'vec3 hsv2rgb(float h, float s, float v){',
 			'vec3 c = vec3(h,s,v);',
@@ -103,12 +103,14 @@
 		'}',
 
 		'void main(void){',
+			'float aspect = windowDimensions.x / windowDimensions.y;',
 			'float xPercent = windowPosition.x / (1.0 - swatchPercent - marginPercent);',
 			'if( xPercent <= 1.0 )',
 			'{',
 				'vec4 color = vec4(xPercent, windowPosition.y, selectedColor.z, 1.0);',
-				'float radius = abs( sqrt(pow(xPercent-selectedColor.x,2.0) + pow((windowPosition.y-selectedColor.y)/aspect,2.0)) );',
-				'if( radius < 0.020 && radius > 0.015 )',
+				'vec2 difference = mat2(windowDimensions.x, 0.0, 0.0, windowDimensions.y) * (selectedColor.xy - color.xy);',
+				'float radius = length(difference);',
+				'if( radius > 4.5 && radius < 6.0 )',
 					'gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.x, color.y, color.z), 1.0 ));',
 				'else',
 					'gl_FragColor = vec4( hsv2rgb(color.x, color.y, color.z), 1.0);',
@@ -116,13 +118,14 @@
 			'else if(windowPosition.x > 1.0-swatchPercent)',
 			'{',
 				'vec4 color = vec4( selectedColor.x, selectedColor.y, windowPosition.y, 1.0);',
-				'if( abs(windowPosition.y-selectedColor.z) < 0.005 )',
+				'if( windowDimensions.y * abs(windowPosition.y-selectedColor.z) < 1.0 )',
 					'gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.x, color.y, color.z), 1.0 ));',
 				'else',
 					'gl_FragColor = vec4( hsv2rgb(color.x, color.y, color.z), 1.0);',
 			'}',
 			'else',
-				'gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );',
+				'discard;',
+				//'gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );',
 		'}'
 	].join('\n');
 
@@ -206,8 +209,8 @@
 		gl.uniform1f(this.swatchUniform, 20/w);
 		this.marginUniform = gl.getUniformLocation(program, 'marginPercent');
 		gl.uniform1f(this.marginUniform, 10/w);
-		this.aspectUniform = gl.getUniformLocation(program, 'aspect');
-		gl.uniform1f(this.aspectUniform, w/h);
+		this.windowDimensionsUniform = gl.getUniformLocation(program, 'windowDimensions');
+		gl.uniform2f(this.windowDimensionsUniform, w,h);
 
 		gl.clearColor(1.0, 1.0, 1.0, 0.0);
 		this.color({h: 0.3, s: 0.9, v: 0.8});
