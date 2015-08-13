@@ -5,6 +5,7 @@
 	// h, s, v [0,1]
 	function hsvToRgb(h,s,v)
 	{
+		console.log(h,s,v);
 		if( s === 0 ){
 			return {r: v, g: v, b: v};
 		}
@@ -62,9 +63,10 @@
 		'</div>',
 		'<div class="controls">',
 			'<div class="rgbInput">',
+				'#',
 				'<span class="r" draggable="true"></span>',
-				'<span class="g"></span>',
-				'<span class="b"></span>',
+				'<span class="g" draggable="true"></span>',
+				'<span class="b" draggable="true"></span>',
 			'</div>',
 			'<div class="colorswatch"></div>',
 		'</div>'
@@ -212,7 +214,7 @@
 		this.windowDimensionsUniform = gl.getUniformLocation(program, 'windowDimensions');
 		gl.uniform2f(this.windowDimensionsUniform, w,h);
 
-		gl.clearColor(1.0, 1.0, 1.0, 0.0);
+		gl.clearColor(0.0, 0.0, 0.0, 0.0);
 		this.color({h: 0.3, s: 0.9, v: 0.8});
 
 		var self = this;
@@ -252,27 +254,33 @@
 		}
 
 		
-		var r = elem.querySelector('.r');
-		var g = elem.querySelector('.g');
-		var b = elem.querySelector('.b');
 
-		var initialR = 0, initialMouse = 0;
+		var initialValue = 0, initialMouse = 0;
 
-		r.ondragstart = function(evt){
-			initialR = Math.round(self.selection.r*255);
-			initialMouse = evt.offsetY;
+		function bindElement(e, channel)
+		{
+			e.ondragstart = function(evt){
+				initialValue = Math.round(self.selection[channel]*255);
+				initialMouse = evt.offsetY;
+				evt.dataTransfer.setDragImage( document.createElement('div'),0,0);
+			}
+			e.ondrag = function(evt){
+				evt.preventDefault();
+				var newVal = initialValue + initialMouse-evt.offsetY;
+				if(evt.screenX !== 0 || evt.screenY !== 0){
+					var color = {};
+					color[channel] = Math.max(0, Math.min(1, newVal/255));
+					self.color(color);
+				}
+			}
+			e.ondragend = function(evt){
+				evt.preventDefault();
+			}
 		}
-		r.ondrag = function(evt){
-			evt.preventDefault();
-			console.log(evt.offsetY);
-			var newR = initialR + initialMouse-evt.offsetY;
-			newR = Math.max(Math.min(newR, 255), 0);
-			console.log(newR);
-			self.color({r: newR/255});
-		}
-		r.ondragend = function(evt){
-			evt.preventDefault();
-		}
+
+		bindElement(elem.querySelector('.r'), 'r');
+		bindElement(elem.querySelector('.g'), 'g');
+		bindElement(elem.querySelector('.b'), 'b');
 	}
 
 	Palette.prototype.redraw = function()
@@ -285,11 +293,11 @@
 
 	Palette.prototype.color = function(val)
 	{
-		if(val && (val.h || val.s || val.v))
+		if(val && (val.h!==undefined || val.s!==undefined || val.v!==undefined))
 		{
-			this.selection.h = val.h || this.selection.h || 1;
-			this.selection.s = val.s || this.selection.s || 1;
-			this.selection.v = val.v || this.selection.v || 1;
+			if(val.h !== undefined) this.selection.h = val.h;
+			if(val.s !== undefined) this.selection.s = val.s;
+			if(val.v !== undefined) this.selection.v = val.v;
 			this.redraw();
 
 			var rgb = hsvToRgb(this.selection.h, this.selection.s, this.selection.v);
@@ -304,13 +312,14 @@
 
 			if(this.colorCallback) this.colorCallback(this.selection);
 		}
-		else if(val && (val.r || val.g || val.b))
+		else if(val && (val.r!==undefined || val.g!==undefined || val.b!==undefined))
 		{
-			if(val.r) this.selection.r = val.r;
-			if(val.g) this.selection.g = val.g;
-			if(val.b) this.selection.b = val.b;
+			if(val.r !== undefined) this.selection.r = val.r;
+			if(val.g !== undefined) this.selection.g = val.g;
+			if(val.b !== undefined) this.selection.b = val.b;
 
 			var hsv = rgbToHsv(this.selection.r, this.selection.g, this.selection.b);
+
 			this.selection.h = hsv.h;
 			this.selection.s = hsv.s;
 			this.selection.v = hsv.v;

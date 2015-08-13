@@ -30,18 +30,34 @@ html-palette {
       cursor: ns-resize; }
   /* line 41, palette.scss */
   html-palette .controls {
-    height: 15%;
+    height: 30px;
     flex-shrink: 0;
     display: flex;
     flex-direction: row;
-    align-items: stretch; }
-    /* line 50, palette.scss */
+    align-items: stretch;
+    justify-content: space-between; }
+    /* line 51, palette.scss */
     html-palette .controls .rgbInput {
-      width: 75%;
-      flex-grow: 1; }
-    /* line 55, palette.scss */
+      display: flex;
+      align-items: center;
+      padding-left: 5px;
+      font-size: 20px;
+      letter-spacing: 1px; }
+      /* line 62, palette.scss */
+      html-palette .controls .rgbInput span {
+        margin: 0 2px;
+        cursor: ns-resize; }
+      /* line 67, palette.scss */
+      html-palette .controls .rgbInput .r {
+        color: red; }
+      /* line 68, palette.scss */
+      html-palette .controls .rgbInput .g {
+        color: green; }
+      /* line 69, palette.scss */
+      html-palette .controls .rgbInput .b {
+        color: blue; }
+    /* line 72, palette.scss */
     html-palette .controls .colorswatch {
-      width: 25%;
-      flex-shrink: 0; }
+      width: 25%; }
 
 /*# sourceMappingURL=palette.css.map */
