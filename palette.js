@@ -76,10 +76,11 @@
 		'precision lowp float;',
 		'attribute vec3 vertPosition;',
 		'varying vec2 windowPosition;',
+		'uniform vec2 windowDimensions;',
 
 		'void main(void)',
 		'{',
-			'mat3 xform = mat3(0.5, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 1.0);',
+			'mat3 xform = mat3(0.5*windowDimensions.x, 0.0, 0.0, 0.0, 0.5*windowDimensions.y, 0.0, windowDimensions.x/2.0, windowDimensions.y/2.0, 1.0);',
 			'windowPosition = (xform * vec3(vertPosition.xy, 1.0)).xy;',
 			'gl_Position = vec4(vertPosition,1);',
 		'}'
@@ -87,11 +88,14 @@
 
 	var fragShaderSrc = [
 		'precision lowp float;',
+		'#define M_PI 3.141592653589',
+
 		'varying vec2 windowPosition;',
 		'uniform vec3 selectedColor;',
-		'uniform float swatchPercent;',
-		'uniform float marginPercent;',
+		'uniform float swatchWidth;',
+		'uniform float marginWidth;',
 		'uniform vec2 windowDimensions;',
+		'uniform bool radial;',
 
 		'vec3 hsv2rgb(float h, float s, float v){',
 			'vec3 c = vec3(h,s,v);',
@@ -105,34 +109,56 @@
 		'}',
 
 		'void main(void){',
-			'float aspect = windowDimensions.x / windowDimensions.y;',
-			'float xPercent = windowPosition.x / (1.0 - swatchPercent - marginPercent);',
-			'if( xPercent <= 1.0 )',
+
+			'float taWidth = windowDimensions.x - swatchWidth - marginWidth;',
+			'float aspect = taWidth / windowDimensions.y;',
+			'vec2 center = vec2(taWidth/2.0, windowDimensions.y/2.0);',
+			'vec4 color;',
+			'vec2 selectionPosition;',
+
+			'if( windowPosition.x <= taWidth )',
 			'{',
-				'vec4 color = vec4(xPercent, windowPosition.y, selectedColor.z, 1.0);',
-				'vec2 difference = mat2(windowDimensions.x, 0.0, 0.0, windowDimensions.y) * (selectedColor.xy - color.xy);',
+				'if(radial){',
+
+					'vec2 radialVec = (windowPosition - center)*vec2(2.0/taWidth, 2.0/windowDimensions.y);',
+					'radialVec = mat2(max(1.0,aspect), 0.0, 0.0, max(1.0,1.0/aspect)) * radialVec;',
+					'if(length(radialVec) > 1.0) discard;',
+					'float hue = atan(radialVec.y,radialVec.x)/(2.0*M_PI) + 0.5;',
+					'color = vec4(hue, length(radialVec), selectedColor.z, 1.0);',
+
+					'float angle = (selectedColor.x-0.5)*2.0*M_PI;',
+					'selectionPosition = min(center.x, center.y) * selectedColor.y * vec2(cos(angle), sin(angle)) + center;',
+
+				'} else {',
+					'color = vec4(windowPosition.x/taWidth, windowPosition.y/windowDimensions.y, selectedColor.z, 1.0);',
+					'selectionPosition = vec2(selectedColor.x*taWidth, selectedColor.y*windowDimensions.y);',
+				'}',
+
+				'vec2 difference = selectionPosition - windowPosition;',
 				'float radius = length(difference);',
+
 				'if( radius > 4.5 && radius < 6.0 )',
 					'gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.x, color.y, color.z), 1.0 ));',
 				'else',
 					'gl_FragColor = vec4( hsv2rgb(color.x, color.y, color.z), 1.0);',
 			'}',
-			'else if(windowPosition.x > 1.0-swatchPercent)',
+			'else if(windowPosition.x > windowDimensions.x-swatchWidth)',
 			'{',
-				'vec4 color = vec4( selectedColor.x, selectedColor.y, windowPosition.y, 1.0);',
-				'if( windowDimensions.y * abs(windowPosition.y-selectedColor.z) < 1.0 )',
+				'vec4 color = vec4( selectedColor.x, selectedColor.y, windowPosition.y/windowDimensions.y, 1.0);',
+
+				'if( windowDimensions.y * abs(windowPosition.y/windowDimensions.y-selectedColor.z) < 1.0 )',
 					'gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.x, color.y, color.z), 1.0 ));',
+
 				'else',
 					'gl_FragColor = vec4( hsv2rgb(color.x, color.y, color.z), 1.0);',
 			'}',
 			'else',
 				'discard;',
-				//'gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );',
 		'}'
 	].join('\n');
 
 
-	var Palette = function(elem)
+	var Palette = function(elem, opts)
 	{
 		this.selection = {};
 
@@ -207,12 +233,10 @@
 		gl.vertexAttribPointer(vertPositionAttrib, 3, this.gl.FLOAT, false, 0, 0);
 
 		this.selectionUniform = gl.getUniformLocation(program, 'selectedColor');
-		this.swatchUniform = gl.getUniformLocation(program, 'swatchPercent');
-		gl.uniform1f(this.swatchUniform, 20/w);
-		this.marginUniform = gl.getUniformLocation(program, 'marginPercent');
-		gl.uniform1f(this.marginUniform, 10/w);
-		this.windowDimensionsUniform = gl.getUniformLocation(program, 'windowDimensions');
-		gl.uniform2f(this.windowDimensionsUniform, w,h);
+		gl.uniform1f(gl.getUniformLocation(program, 'swatchWidth'), 20);
+		gl.uniform1f(gl.getUniformLocation(program, 'marginWidth'), 10);
+		gl.uniform2f(gl.getUniformLocation(program, 'windowDimensions'), w,h);
+		gl.uniform1i(gl.getUniformLocation(program, 'radial'), !!opts.radial);
 
 		gl.clearColor(0.0, 0.0, 0.0, 0.0);
 		this.color({h: 0.3, s: 0.9, v: 0.8});
@@ -223,13 +247,28 @@
 		twoaxis.onmousedown = function(evt)
 		{
 			twoaxis_tracking = true;
-
-			self.color({h: (evt.offsetX-1)/(paletteWidth), s: (h-evt.offsetY+1)/(h-1)});
+			if( opts.radial ){
+				var center = [paletteWidth/2, h/2];
+				var clickDiff = [evt.offsetX-1 - center[0], -(evt.offsetY-1) + center[1]];
+				var hue = Math.atan2(clickDiff[1], clickDiff[0])/(2*Math.PI) + 0.5;
+				var sat = Math.sqrt(clickDiff[0]*clickDiff[0] + clickDiff[1]*clickDiff[1]) / Math.min(center[0], center[1]);
+				self.color({h: hue, s: Math.min(sat, 1.0)});
+			}
+			else
+				self.color({h: (evt.offsetX-1)/(paletteWidth), s: (h-evt.offsetY+1)/(h-1)});
 		}
 
 		twoaxis.onmousemove = function(evt){
 			if(twoaxis_tracking){
-				self.color({h: (evt.offsetX-1)/(paletteWidth), s: (h-evt.offsetY+1)/(h-1)});
+				if( opts.radial ){
+					var center = [paletteWidth/2, h/2];
+					var clickDiff = [evt.offsetX-1 - center[0], -(evt.offsetY-1) + center[1]];
+					var hue = Math.atan2(clickDiff[1], clickDiff[0])/(2*Math.PI) + 0.5;
+					var sat = Math.sqrt(clickDiff[0]*clickDiff[0] + clickDiff[1]*clickDiff[1]) / Math.min(center[0], center[1]);
+					self.color({h: hue, s: Math.min(sat, 1.0)});
+				}
+				else
+					self.color({h: (evt.offsetX-1)/(paletteWidth), s: (h-evt.offsetY+1)/(h-1)});
 			}
 		}
 
@@ -265,7 +304,7 @@
 				evt.dataTransfer.setDragImage( document.createElement('div'),0,0);
 			}
 			e.ondrag = function(evt){
-				evt.preventDefault();
+				//evt.preventDefault();
 				var newVal = initialValue + initialMouse-evt.offsetY;
 				if(evt.screenX !== 0 || evt.screenY !== 0){
 					var color = {};
@@ -274,7 +313,7 @@
 				}
 			}
 			e.ondragend = function(evt){
-				evt.preventDefault();
+				//evt.preventDefault();
 			}
 		}
 
@@ -377,7 +416,7 @@
 				},
 				link: function($scope, elem, attrs)
 				{
-					var palette = new Palette(elem[0]);
+					var palette = new Palette(elem[0], attrs);
 
 					$scope.$watch('hsvColor', function(newval)
 					{
