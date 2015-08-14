@@ -5,7 +5,6 @@
 	// h, s, v [0,1]
 	function hsvToRgb(h,s,v)
 	{
-		console.log(h,s,v);
 		if( s === 0 ){
 			return {r: v, g: v, b: v};
 		}
@@ -181,6 +180,17 @@
 		twoaxis.style.width = paletteWidth + 'px';
 		twoaxis.style.height = h + 'px';
 		oneaxis.style.height = h + 'px';
+
+		elem.style.display = 'none';
+		if( elem.previousElementSibling ){
+			elem.previousElementSibling.onclick = function(evt){
+				elem.style.display = elem.style.display ? '' : 'none';
+				elem.style.left = evt.x+15+'px';
+				elem.style.top = evt.y+15+'px';
+				console.log(evt);
+			}
+		}
+
 
 
 		/********************************
@@ -378,7 +388,7 @@
 	{
 		var app = angular.module('html-palette', []);
 
-		app.directive('htmlPalette', function()
+		app.directive('htmlPalette', ['$timeout', function($timeout)
 		{
 			return {
 				restrict: 'E',
@@ -391,47 +401,84 @@
 				link: function($scope, elem, attrs)
 				{
 					var palette = new Palette(elem[0], attrs);
+					var dToW = false, wToD = false;
 
-					$scope.$watch('hsvColor', function(newval)
+					if($scope.hsvColor)
 					{
-						if(newval){
-							palette.setColorCallback(function(color){
+						palette.setColorCallback(function(color){
+							if(!dToW){
+								wToD = true;
+								console.log('wToD');
 								$scope.hsvColor.h = color.h;
 								$scope.hsvColor.s = color.s;
 								$scope.hsvColor.v = color.v;
-							});
-							palette.color({h:newval.h, s:newval.s, v:newval.v});
-						}
-					});
+								$timeout(function(){
+									$scope.$apply();
+									wToD = false;
+								});
+							}
+						});
 
-					$scope.$watch('rgbColor', function(newval)
+						$scope.$watchCollection('hsvColor', function(newval){
+							if(newval && !wToD){
+								dToW = true;
+								console.log('dTow');
+								palette.color(newval);
+								dToW = false;
+							}
+						});
+					}
+
+					else if($scope.rgbColor)
 					{
-						if(newval){
-							palette.setColorCallback(function(color){
+						palette.setColorCallback(function(color){
+							if(!dToW){
+								wToD = true;
 								$scope.rgbColor.r = color.r;
 								$scope.rgbColor.g = color.g;
 								$scope.rgbColor.b = color.b;
-							});
-							palette.color({r:newval.r, g:newval.g, b:newval.b});
-						}
-					});
+								$timeout(function(){
+									$scope.$apply();
+									wToD = false;
+								});
+							}
+						});
 
-					$scope.$watch('hexColor', function(newval)
+						$scope.$watchCollection('rgbColor', function(newval){
+							if(newval && !wToD){
+								dToW = true;
+								palette.color(newval);
+								dToW = false;
+							}
+						});
+					}
+
+					else if($scope.hexColor)
 					{
-						if(newval){
-							palette.setColorCallback(function(color){
+						palette.setColorCallback(function(color){
+							if(!dToW){
+								wToD = true;
 								$scope.hexColor = color.hex;
-							});
-							palette.color(newval);
-						}
-					});
+								$timeout(function(){
+									$scope.$apply();
+									wToD = false;
+								});
+							}
+						});
+
+						$scope.$watch('hexColor', function(newval){
+							if(newval && !wToD){
+								dToW = true;
+								palette.color(newval);
+								dToW = false;
+							}
+						});
+					}
 
 					palette.redraw();
-
-					window.palette = palette;
 				}
 			};
-		});
+		}]);
 	}
 
 })(window.jQuery, window.angular);

@@ -1,9 +1,10 @@
 /* line 3, palette.scss */
 html-palette {
   width: 200px;
-  height: 150px;
+  height: 200px;
   border: solid grey 1px;
   padding: 5px;
+  background-color: white;
   display: -webkit-box;
   display: -moz-flex;
   display: -ms-flexbox;
@@ -14,8 +15,9 @@ html-palette {
   -ms-flex-direction: column;
   -webkit-flex-direction: column;
   flex-direction: column;
+  position: absolute;
   box-sizing: border-box; }
-  /* line 15, palette.scss */
+  /* line 17, palette.scss */
   html-palette .palette {
     position: relative;
     padding: 1px;
@@ -23,23 +25,23 @@ html-palette {
     -ms-flex: 1 1;
     -webkit-flex-grow: 1;
     flex-grow: 1; }
-    /* line 21, palette.scss */
+    /* line 23, palette.scss */
     html-palette .palette .twoaxis, html-palette .palette .oneaxis {
       position: absolute;
       border: solid grey 1px; }
-    /* line 27, palette.scss */
+    /* line 29, palette.scss */
     html-palette .palette .twoaxis {
       top: 0px;
       left: 0px;
       cursor: crosshair; }
-    /* line 33, palette.scss */
+    /* line 35, palette.scss */
     html-palette .palette .oneaxis {
       top: 0px;
       right: 0px;
       width: 20px;
       margin-left: 10px;
       cursor: ns-resize; }
-  /* line 43, palette.scss */
+  /* line 45, palette.scss */
   html-palette .controls {
     height: 30px;
     -moz-flex-shrink: 0;
@@ -66,7 +68,7 @@ html-palette {
     -ms-flex-pack: justify;
     -webkit-justify-content: space-between;
     justify-content: space-between; }
-    /* line 54, palette.scss */
+    /* line 56, palette.scss */
     html-palette .controls .rgbInput {
       display: -webkit-box;
       display: -moz-flex;
@@ -81,21 +83,23 @@ html-palette {
       padding-left: 5px;
       font-size: 20px;
       letter-spacing: 1px; }
-      /* line 63, palette.scss */
+      /* line 65, palette.scss */
       html-palette .controls .rgbInput span {
         margin: 0 2px;
         cursor: ns-resize; }
-      /* line 68, palette.scss */
+      /* line 70, palette.scss */
       html-palette .controls .rgbInput .r {
         color: red; }
-      /* line 69, palette.scss */
+      /* line 71, palette.scss */
       html-palette .controls .rgbInput .g {
         color: green; }
-      /* line 70, palette.scss */
+      /* line 72, palette.scss */
       html-palette .controls .rgbInput .b {
         color: blue; }
-    /* line 73, palette.scss */
+    /* line 75, palette.scss */
     html-palette .controls .colorswatch {
-      width: 25%; }
+      width: 25%;
+      box-sizing: border-box;
+      border: solid grey 1px; }
 
 /*# sourceMappingURL=palette.css.map */

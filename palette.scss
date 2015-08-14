@@ -3,13 +3,15 @@
 html-palette
 {
 	width: 200px;
-	height: 150px;
+	height: 200px;
 
 	border: solid grey 1px;
 	padding: 5px;
+	background-color: white;
 
 	@include display-flex();
 	@include flex-direction(column);
+	position: absolute;
 	box-sizing: border-box;
 
 	.palette
@@ -73,7 +75,8 @@ html-palette
 		.colorswatch
 		{
 			width: 25%;
-			//flex-shrink: 0;
+			box-sizing: border-box;
+			border: solid grey 1px;
 		}
 	}
 

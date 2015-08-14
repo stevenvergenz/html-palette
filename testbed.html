@@ -1,12 +1,21 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<link rel='stylesheet' href='palette.css'/>
 		<script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.min.js'></script>
 		<script src='palette.js'></script>
-		<link rel='stylesheet' href='palette.css'/>
+		<script>
+			angular.module('testbed', ['html-palette'])
+				.controller('TestbedController', ['$scope', function($scope){
+					window.scope = $scope;
+					$scope.fields = {color: '000000'};
+				}]);
+		</script>
 	</head>
-	<body ng-app='html-palette'>
-		<html-palette style='width: 350px; height: 350px;', radial="true"></html-palette>
-		<html-palette></html-palette>
+	<body>
+		<div ng-app='testbed' ng-controller='TestbedController'>
+			<input type='button' value='Pick my color' ng-style='{"color": "#"+fields.color}'/>
+			<html-palette hex-color='fields.color'></html-palette>
+		</div>
 	</body>
 </html>
