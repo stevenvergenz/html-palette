@@ -1,3 +1,5 @@
+@import 'polyfill';
+
 html-palette
 {
 	width: 200px;
@@ -6,15 +8,15 @@ html-palette
 	border: solid grey 1px;
 	padding: 5px;
 
-	display: flex;
-	flex-direction: column;
+	@include display-flex();
+	@include flex-direction(column);
 	box-sizing: border-box;
 
 	.palette
 	{
 		position: relative;
 		padding: 1px;
-		flex-grow: 1;
+		@include flex-grow(1);
 
 		.twoaxis, .oneaxis
 		{
@@ -42,18 +44,17 @@ html-palette
 	{
 		//margin-top: 5px;
 		height: 30px;
-		flex-shrink: 0;
-		display: flex;
-		flex-direction: row;
-		align-items: stretch;
-		justify-content: space-between;
+		@include flex-shrink(0);
+
+		@include display-flex();
+		@include flex-direction(row);
+		@include align-items(stretch);
+		@include justify-content(space-between);
 
 		.rgbInput
 		{
-			//width: 75%;
-			//flex-grow: 1;
-			display: flex;
-			align-items: center;
+			@include display-flex();
+			@include align-items(center);
 			padding-left: 5px;
 
 			font-size: 20px;

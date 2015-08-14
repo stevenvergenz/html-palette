@@ -1,62 +1,100 @@
-/* line 1, palette.scss */
+/* line 3, palette.scss */
 html-palette {
   width: 200px;
   height: 150px;
   border: solid grey 1px;
   padding: 5px;
+  display: -webkit-box;
+  display: -moz-flex;
+  display: -ms-flexbox;
+  display: -webkit-flex;
   display: flex;
+  -webkit-box-orient: vertical;
+  -moz-flex-direction: column;
+  -ms-flex-direction: column;
+  -webkit-flex-direction: column;
   flex-direction: column;
   box-sizing: border-box; }
-  /* line 13, palette.scss */
+  /* line 15, palette.scss */
   html-palette .palette {
     position: relative;
     padding: 1px;
+    -moz-flex-grow: 1;
+    -ms-flex: 1 1;
+    -webkit-flex-grow: 1;
     flex-grow: 1; }
-    /* line 19, palette.scss */
+    /* line 21, palette.scss */
     html-palette .palette .twoaxis, html-palette .palette .oneaxis {
       position: absolute;
       border: solid grey 1px; }
-    /* line 25, palette.scss */
+    /* line 27, palette.scss */
     html-palette .palette .twoaxis {
       top: 0px;
       left: 0px;
       cursor: crosshair; }
-    /* line 31, palette.scss */
+    /* line 33, palette.scss */
     html-palette .palette .oneaxis {
       top: 0px;
       right: 0px;
       width: 20px;
       margin-left: 10px;
       cursor: ns-resize; }
-  /* line 41, palette.scss */
+  /* line 43, palette.scss */
   html-palette .controls {
     height: 30px;
+    -moz-flex-shrink: 0;
+    -ms-flex-shrink: 0;
+    -webkit-flex-shrink: 0;
     flex-shrink: 0;
+    display: -webkit-box;
+    display: -moz-flex;
+    display: -ms-flexbox;
+    display: -webkit-flex;
     display: flex;
+    -webkit-box-orient: horizontal;
+    -moz-flex-direction: row;
+    -ms-flex-direction: row;
+    -webkit-flex-direction: row;
     flex-direction: row;
+    -webkit-box-align: stretch;
+    -moz-align-items: stretch;
+    -ms-flex-align: stretch;
+    -webkit-align-items: stretch;
     align-items: stretch;
+    -webkit-box-pack: justify;
+    -moz-justify-content: space-between;
+    -ms-flex-pack: justify;
+    -webkit-justify-content: space-between;
     justify-content: space-between; }
-    /* line 51, palette.scss */
+    /* line 54, palette.scss */
     html-palette .controls .rgbInput {
+      display: -webkit-box;
+      display: -moz-flex;
+      display: -ms-flexbox;
+      display: -webkit-flex;
       display: flex;
+      -webkit-box-align: center;
+      -moz-align-items: center;
+      -ms-flex-align: center;
+      -webkit-align-items: center;
       align-items: center;
       padding-left: 5px;
       font-size: 20px;
       letter-spacing: 1px; }
-      /* line 62, palette.scss */
+      /* line 63, palette.scss */
       html-palette .controls .rgbInput span {
         margin: 0 2px;
         cursor: ns-resize; }
-      /* line 67, palette.scss */
+      /* line 68, palette.scss */
       html-palette .controls .rgbInput .r {
         color: red; }
-      /* line 68, palette.scss */
+      /* line 69, palette.scss */
       html-palette .controls .rgbInput .g {
         color: green; }
-      /* line 69, palette.scss */
+      /* line 70, palette.scss */
       html-palette .controls .rgbInput .b {
         color: blue; }
-    /* line 72, palette.scss */
+    /* line 73, palette.scss */
     html-palette .controls .colorswatch {
       width: 25%; }
 
