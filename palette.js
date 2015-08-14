@@ -58,8 +58,8 @@
 	var template = [
 		'<div class="palette">',
 			'<canvas width="1" height="1"></canvas>',
-			'<div class="twoaxis"></div>',
-			'<div class="oneaxis"></div>',
+			'<div class="twoaxis" draggable="true"></div>',
+			'<div class="oneaxis" draggable="true"></div>',
 		'</div>',
 		'<div class="controls">',
 			'<div class="rgbInput">',
@@ -243,66 +243,43 @@
 
 		var self = this;
 
-		var twoaxis_tracking = false;
-		twoaxis.onmousedown = function(evt)
-		{
-			twoaxis_tracking = true;
+		twoaxis.ondragstart = function(evt){
+			evt.dataTransfer.setDragImage(document.createElement('div'),0,0);
+		}
+
+		twoaxis.ondrag = twoaxis.onmousedown = function(evt){
 			if( opts.radial ){
 				var center = [paletteWidth/2, h/2];
 				var clickDiff = [evt.offsetX-1 - center[0], -(evt.offsetY-1) + center[1]];
 				var hue = Math.atan2(clickDiff[1], clickDiff[0])/(2*Math.PI) + 0.5;
 				var sat = Math.sqrt(clickDiff[0]*clickDiff[0] + clickDiff[1]*clickDiff[1]) / Math.min(center[0], center[1]);
-				self.color({h: hue, s: Math.min(sat, 1.0)});
-			}
-			else
-				self.color({h: (evt.offsetX-1)/(paletteWidth), s: (h-evt.offsetY+1)/(h-1)});
-		}
-
-		twoaxis.onmousemove = function(evt){
-			if(twoaxis_tracking){
-				if( opts.radial ){
-					var center = [paletteWidth/2, h/2];
-					var clickDiff = [evt.offsetX-1 - center[0], -(evt.offsetY-1) + center[1]];
-					var hue = Math.atan2(clickDiff[1], clickDiff[0])/(2*Math.PI) + 0.5;
-					var sat = Math.sqrt(clickDiff[0]*clickDiff[0] + clickDiff[1]*clickDiff[1]) / Math.min(center[0], center[1]);
+				if( evt.screenX !== 0 || evt.screenY !== 0 )
 					self.color({h: hue, s: Math.min(sat, 1.0)});
-				}
-				else
-					self.color({h: (evt.offsetX-1)/(paletteWidth), s: (h-evt.offsetY+1)/(h-1)});
 			}
+			else if( evt.screenX !== 0 || evt.screenY !== 0 )
+				self.color({h: Math.min(1, Math.max(0, (evt.offsetX-1)/paletteWidth)), s: Math.min(1, Math.max(0, (h-evt.offsetY+1)/(h-1)))});	
 		}
 
-		twoaxis.onmouseup = twoaxis.onmouseleave = function(evt){
-			twoaxis_tracking = false;
+		oneaxis.ondragstart = function(evt){
+			evt.dataTransfer.setDragImage(document.createElement('div'),0,0);
 		}
 
-		var oneaxis_tracking = false;
-		oneaxis.onmousedown = function(evt){
-			oneaxis_tracking = true;
-			self.color({v: (h-evt.offsetY-1)/(h-1)});
+		oneaxis.ondrag = oneaxis.onmousedown = function(evt){
+			if( evt.screenX !== 0 || evt.screenY !== 0 )
+				self.color({v: Math.max(0, Math.min(1, (h-evt.offsetY-1)/(h-1)))});
 		}
 
-		oneaxis.onmousemove = function(evt){
-			if(oneaxis_tracking){
-				self.color({v: (h-evt.offsetY-1)/(h-1)});
-			}
-		}
+		var initialValue, initialMouse;
 
-		oneaxis.onmouseup = oneaxis.onmouseleave = function(evt){
-			oneaxis_tracking = false;
-		}
-
-		
-
-		var initialValue = 0, initialMouse = 0;
-
-		function bindElement(e, channel)
+		function bindRGBElement(e, channel)
 		{
 			e.ondragstart = function(evt){
 				initialValue = Math.round(self.selection[channel]*255);
 				initialMouse = evt.offsetY;
-				evt.dataTransfer.setDragImage( document.createElement('div'),0,0);
+				evt.dataTransfer.effectAllowed = 'none';
+				evt.dataTransfer.setDragImage(document.createElement('div'),0,0);
 			}
+
 			e.ondrag = function(evt){
 				//evt.preventDefault();
 				var newVal = initialValue + initialMouse-evt.offsetY;
@@ -312,14 +289,11 @@
 					self.color(color);
 				}
 			}
-			e.ondragend = function(evt){
-				//evt.preventDefault();
-			}
 		}
 
-		bindElement(elem.querySelector('.r'), 'r');
-		bindElement(elem.querySelector('.g'), 'g');
-		bindElement(elem.querySelector('.b'), 'b');
+		bindRGBElement(elem.querySelector('.r'), 'r');
+		bindRGBElement(elem.querySelector('.g'), 'g');
+		bindRGBElement(elem.querySelector('.b'), 'b');
 	}
 
 	Palette.prototype.redraw = function()
