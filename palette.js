@@ -156,6 +156,13 @@
 		'}'
 	].join('\n');
 
+	document.addEventListener('click', function(evt)
+	{
+		var list = document.querySelectorAll('.htmlPalette');
+		for(var i=0; i<list.length; i++){
+			if(list.item(i) !== self.elem) list.item(i).style.display = 'none';
+		}
+	});
 
 	var Palette = function(triggerElem, opts)
 	{
@@ -163,8 +170,10 @@
 		this.elem = document.createElement('div');
 		this.elem.setAttribute('class', 'htmlPalette');
 		this.elem.innerHTML = template;
+		this.elem.onclick = function(e){ e.stopPropagation(); }
 		document.body.appendChild(this.elem);
 
+		this.colorCallback = opts.colorCallback || null;
 		this.selection = {};
 		this.canvas = this.elem.querySelector('canvas');
 		this.gl = this.canvas.getContext('webgl');
@@ -248,11 +257,18 @@
 
 		var self = this;
 
-		triggerElem.addEventListener('click', function(evt){
-			self.elem.style.display = self.elem.style.display ? '' : 'none';
+		triggerElem.addEventListener('click', function(evt)
+		{
+			evt.stopPropagation();
+
+			var list = document.querySelectorAll('.htmlPalette');
+			for(var i=0; i<list.length; i++){
+				if(list.item(i) !== self.elem) list.item(i).style.display = 'none';
+			}
+
+			self.elem.style.display = '';
 			self.elem.style.left = evt.x+15+'px';
 			self.elem.style.top = evt.y+15+'px';
-			console.log(evt);
 		});
 
 		twoaxis.ondragstart = function(evt){
@@ -411,7 +427,6 @@
 							if(!dToW)
 							{
 								wToD = true;
-								console.log('wToD');
 								$scope.hsvColor.h = color.h;
 								$scope.hsvColor.s = color.s;
 								$scope.hsvColor.v = color.v;
@@ -429,7 +444,6 @@
 						$scope.$watchCollection('hsvColor', function(newval){
 							if(newval && !wToD){
 								dToW = true;
-								console.log('dTow');
 								palette.color(newval);
 								dToW = false;
 							}

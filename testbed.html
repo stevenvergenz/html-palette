@@ -9,12 +9,14 @@
 				.controller('TestbedController', ['$scope', function($scope){
 					window.scope = $scope;
 					$scope.fields = {color: 'deadbf'};
+					$scope.hsvColor = {h:0.3, s:0.8, v:0.8};
 				}]);
 		</script>
 	</head>
 	<body>
 		<div ng-app='testbed' ng-controller='TestbedController'>
 			<html-palette hex-color='fields.color'></html-palette>
+			<html-palette hsv-color='hsvColor'></html-palette>
 		</div>
 	</body>
 </html>
