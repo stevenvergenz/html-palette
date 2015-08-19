@@ -1,4 +1,4 @@
-html-palette {
+html-palette, .html-palette {
   display: inline-block;
   width: 30px;
   height: 30px;
@@ -95,3 +95,5 @@ html-palette {
       width: 25%;
       box-sizing: border-box;
       border: solid grey 1px; }
+
+/*# sourceMappingURL=palette.css.map */

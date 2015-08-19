@@ -174,10 +174,16 @@
 		document.body.appendChild(this.elem);
 
 		this.colorCallback = opts.colorCallback || null;
+		this.popupEdge = opts.popupEdge || 'se';
+
 		this.selection = {};
 		this.canvas = this.elem.querySelector('canvas');
 		this.gl = this.canvas.getContext('webgl');
 		var gl = this.gl;
+
+		var popupStyle = window.getComputedStyle(this.elem);
+		this.popupWidth = parseInt(popupStyle.width) || 0;
+		this.popupHeight = parseInt(popupStyle.height) || 0;
 
 		// size the canvas
 		var style = window.getComputedStyle(this.elem.querySelector('.palette'));
@@ -253,7 +259,7 @@
 		gl.uniform1i(gl.getUniformLocation(program, 'radial'), !!opts.radial);
 
 		gl.clearColor(0.0, 0.0, 0.0, 0.0);
-		this.color({h: 0.3, s: 0.9, v: 0.8});
+		this.color(opts.initialColor || 'aaaaaa');
 
 		var self = this;
 
@@ -262,13 +268,44 @@
 			evt.stopPropagation();
 
 			var list = document.querySelectorAll('.htmlPalette');
-			for(var i=0; i<list.length; i++){
-				if(list.item(i) !== self.elem) list.item(i).style.display = 'none';
-			}
+			for(var i=0; i<list.length; i++)
+			{
+				if(list.item(i) !== self.elem || !self.elem.style.display){
+					list.item(i).style.display = 'none';
+				}
+				else
+				{
+					var offset = 20;
 
-			self.elem.style.display = '';
-			self.elem.style.left = evt.x+15+'px';
-			self.elem.style.top = evt.y+15+'px';
+					// fall back on sw on missing or invalid option
+					if( !/^[ns]?[we]?$/.test(self.popupEdge) || !self.popupEdge )
+						self.popupEdge = 'se';
+
+					// set position vertically
+					if(/^n/.test(self.popupEdge)){
+						self.elem.style.top = evt.clientY - self.popupHeight - offset + 'px';
+					}
+					else if(/^s/.test(self.popupEdge)){
+						self.elem.style.top = evt.clientY + offset + 'px';
+					}
+					else {
+						self.elem.style.top = evt.clientY - self.popupHeight/2 + 'px';
+					}
+
+					// set position horizontally
+					if(/e$/.test(self.popupEdge)){
+						self.elem.style.left = evt.clientX + offset + 'px';
+					}
+					else if(/w$/.test(self.popupEdge)){
+						self.elem.style.left = evt.clientX - self.popupWidth - offset + 'px';
+					}
+					else {
+						self.elem.style.left = evt.clientX - self.popupWidth/2 + 'px';
+					}
+
+					self.elem.style.display = '';
+				}
+			}
 		});
 
 		twoaxis.ondragstart = function(evt){
@@ -402,6 +439,8 @@
 		this.colorCallback = cb;
 	}
 
+
+	window.HtmlPalette = Palette;
 
 	if(angular)
 	{

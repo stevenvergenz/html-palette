@@ -9,14 +9,28 @@
 				.controller('TestbedController', ['$scope', function($scope){
 					window.scope = $scope;
 					$scope.fields = {color: 'deadbf'};
-					$scope.hsvColor = {h:0.3, s:0.8, v:0.8};
 				}]);
+
 		</script>
 	</head>
 	<body>
-		<div ng-app='testbed' ng-controller='TestbedController'>
+		<div id='angularPicker' ng-app='testbed' ng-controller='TestbedController'>
+			<p>This picker is implemented with an Angular.js directive:</p>
 			<html-palette hex-color='fields.color'></html-palette>
-			<html-palette hsv-color='hsvColor'></html-palette>
 		</div>
+
+		<p>This picker is in Vanilla.js:</p>
+		<div id='classicPicker' class='html-palette'></div>
+		<script>
+			var palette = new HtmlPalette( document.getElementById('classicPicker'), {
+				radial: true,
+				popupEdge: 'e',
+				initialColor: {h: 0.3, s: 0.8, v: 0.8},
+				colorCallback: function(color){
+					document.getElementById('classicPicker').style['background-color'] = '#'+color.hex;
+				}
+			});
+		</script>
+
 	</body>
 </html>
