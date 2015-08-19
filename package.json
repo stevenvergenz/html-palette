@@ -1,0 +1,22 @@
+{
+  "name": "htmlPalette",
+  "version": "0.0.0",
+  "description": "Color picker widget",
+  "main": "palette.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/stevenvergenz/html-palette.git"
+  },
+  "author": "Steven Vergenz <vergenzs@gmail.com>",
+  "license": "Apache-2",
+  "bugs": {
+    "url": "https://github.com/stevenvergenz/html-palette/issues"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.5",
+    "grunt-template": "~0.2.3"
+  }
+}

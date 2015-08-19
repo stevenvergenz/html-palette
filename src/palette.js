@@ -85,76 +85,7 @@
 		'}'
 	].join('\n');
 
-	var fragShaderSrc = [
-		'precision lowp float;',
-		'#define M_PI 3.141592653589',
-
-		'varying vec2 windowPosition;',
-		'uniform vec3 selectedColor;',
-		'uniform float swatchWidth;',
-		'uniform float marginWidth;',
-		'uniform vec2 windowDimensions;',
-		'uniform bool radial;',
-
-		'vec3 hsv2rgb(float h, float s, float v){',
-			'vec3 c = vec3(h,s,v);',
-			'vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);',
-			'vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);',
-			'return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);',
-		'}',
-
-		'vec4 getSelectionColor(vec4 baseColor){',
-			'return vec4( vec3(1.0)-baseColor.rgb, baseColor.a );',
-		'}',
-
-		'void main(void){',
-
-			'float taWidth = windowDimensions.x - swatchWidth - marginWidth;',
-			'float aspect = taWidth / windowDimensions.y;',
-			'vec2 center = vec2(taWidth/2.0, windowDimensions.y/2.0);',
-			'vec4 color;',
-			'vec2 selectionPosition;',
-
-			'if( windowPosition.x <= taWidth )',
-			'{',
-				'if(radial){',
-
-					'vec2 radialVec = (windowPosition - center)*vec2(2.0/taWidth, 2.0/windowDimensions.y);',
-					'radialVec = mat2(max(1.0,aspect), 0.0, 0.0, max(1.0,1.0/aspect)) * radialVec;',
-					'if(length(radialVec) > 1.0) discard;',
-					'float hue = atan(radialVec.y,radialVec.x)/(2.0*M_PI) + 0.5;',
-					'color = vec4(hue, length(radialVec), selectedColor.z, 1.0);',
-
-					'float angle = (selectedColor.x-0.5)*2.0*M_PI;',
-					'selectionPosition = min(center.x, center.y) * selectedColor.y * vec2(cos(angle), sin(angle)) + center;',
-
-				'} else {',
-					'color = vec4(windowPosition.x/taWidth, windowPosition.y/windowDimensions.y, selectedColor.z, 1.0);',
-					'selectionPosition = vec2(selectedColor.x*taWidth, selectedColor.y*windowDimensions.y);',
-				'}',
-
-				'vec2 difference = selectionPosition - windowPosition;',
-				'float radius = length(difference);',
-
-				'if( radius > 4.5 && radius < 6.0 )',
-					'gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.x, color.y, color.z), 1.0 ));',
-				'else',
-					'gl_FragColor = vec4( hsv2rgb(color.x, color.y, color.z), 1.0);',
-			'}',
-			'else if(windowPosition.x > windowDimensions.x-swatchWidth)',
-			'{',
-				'vec4 color = vec4( selectedColor.x, selectedColor.y, windowPosition.y/windowDimensions.y, 1.0);',
-
-				'if( windowDimensions.y * abs(windowPosition.y/windowDimensions.y-selectedColor.z) < 1.0 )',
-					'gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.x, color.y, color.z), 1.0 ));',
-
-				'else',
-					'gl_FragColor = vec4( hsv2rgb(color.x, color.y, color.z), 1.0);',
-			'}',
-			'else',
-				'discard;',
-		'}'
-	].join('\n');
+	var fragShaderSrc = '<%= fragShader %>';
 
 	document.addEventListener('click', function(evt)
 	{
@@ -174,27 +105,27 @@
 		document.body.appendChild(this.elem);
 
 		this.triggerElem = triggerElem;
-		this.onclick = Palette.onclick.bind(this);
-		this.triggerElem.addEventListener('click', this.onclick);
+		this._onclick = Palette.onclick.bind(this);
+		this.triggerElem.addEventListener('click', this._onclick);
 
 		this.colorCallback = opts.colorCallback || null;
 		this.popupEdge = opts.popupEdge || 'se';
 		this.radial = opts.radial || false;
 
 		this.selection = {};
-		this.canvas = this.elem.querySelector('canvas');
-		this.gl = this.canvas.getContext('webgl');
-		var gl = this.gl;
+		this._canvas = this.elem.querySelector('canvas');
+		this._gl = this._canvas.getContext('webgl');
+		var gl = this._gl;
 
 		var popupStyle = window.getComputedStyle(this.elem);
-		this.popupWidth = parseInt(popupStyle.width) || 0;
-		this.popupHeight = parseInt(popupStyle.height) || 0;
+		this._popupWidth = parseInt(popupStyle.width) || 0;
+		this._popupHeight = parseInt(popupStyle.height) || 0;
 
 		// size the canvas
 		var style = window.getComputedStyle(this.elem.querySelector('.palette'));
 		var w = parseInt(style.width), h = parseInt(style.height)-1;
-		this.canvas.width = w;
-		this.canvas.height = h;
+		this._canvas.width = w;
+		this._canvas.height = h;
 		gl.viewport(0, 0, w, h);
 
 		// size the overlay
@@ -255,9 +186,9 @@
 			 1.0,  1.0, 0.0
 		]), gl.STATIC_DRAW);
 
-		gl.vertexAttribPointer(vertPositionAttrib, 3, this.gl.FLOAT, false, 0, 0);
+		gl.vertexAttribPointer(vertPositionAttrib, 3, gl.FLOAT, false, 0, 0);
 
-		this.selectionUniform = gl.getUniformLocation(program, 'selectedColor');
+		this._selectionUniform = gl.getUniformLocation(program, 'selectedColor');
 		gl.uniform1f(gl.getUniformLocation(program, 'swatchWidth'), 20);
 		gl.uniform1f(gl.getUniformLocation(program, 'marginWidth'), 10);
 		gl.uniform2f(gl.getUniformLocation(program, 'windowDimensions'), w,h);
@@ -340,23 +271,23 @@
 
 				// set position vertically
 				if(/^n/.test(this.popupEdge))
-					this.elem.style.top = evt.clientY - this.popupHeight - offset + 'px';
+					this.elem.style.top = evt.clientY - this._popupHeight - offset + 'px';
 
 				else if(/^s/.test(this.popupEdge))
 					this.elem.style.top = evt.clientY + offset + 'px';
 
 				else
-					this.elem.style.top = evt.clientY - this.popupHeight/2 + 'px';
+					this.elem.style.top = evt.clientY - this._popupHeight/2 + 'px';
 
 				// set position horizontally
 				if(/e$/.test(this.popupEdge))
 					this.elem.style.left = evt.clientX + offset + 'px';
 
 				else if(/w$/.test(this.popupEdge))
-					this.elem.style.left = evt.clientX - this.popupWidth - offset + 'px';
+					this.elem.style.left = evt.clientX - this._popupWidth - offset + 'px';
 
 				else
-					this.elem.style.left = evt.clientX - this.popupWidth/2 + 'px';
+					this.elem.style.left = evt.clientX - this._popupWidth/2 + 'px';
 
 				this.elem.style.display = '';
 			}
@@ -365,11 +296,11 @@
 
 	Palette.prototype.redraw = function()
 	{
-		this.gl.uniform1i(this.gl.getUniformLocation(this._program, 'radial'), !!this.radial);
-		this.gl.uniform3f(this.selectionUniform, this.selection.h, this.selection.s, this.selection.v);
+		this._gl.uniform1i(this._gl.getUniformLocation(this._program, 'radial'), !!this.radial);
+		this._gl.uniform3f(this._selectionUniform, this.selection.h, this.selection.s, this.selection.v);
 
-		this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-		this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+		this._gl.clear(this._gl.COLOR_BUFFER_BIT);
+		this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4);
 	}
 
 	Palette.prototype.color = function(val)
@@ -445,7 +376,7 @@
 	Palette.prototype.destroy = function()
 	{
 		document.body.removeChild(this.elem);
-		this.triggerElem.removeEventListener('click', this.onclick)
+		this.triggerElem.removeEventListener('click', this._onclick)
 	}
 
 

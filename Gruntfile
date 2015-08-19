@@ -1,0 +1,24 @@
+var fs = require('fs'),
+	libpath = require('path');
+
+module.exports = function(grunt)
+{
+	grunt.initConfig({
+		pkg: grunt.file.readJSON('package.json'),
+		template: {
+			processRoot: {
+				options: {
+					data: {
+						fragShader: fs.readFileSync(libpath.join(__dirname, 'src/fragShader.glsl'))
+					}
+				},
+				files: {
+					'build/palette.js': ['src/palette.js']
+				}
+			}
+		}
+	});
+
+	grunt.loadNpmTasks('grunt-template');
+	grunt.registerTask('default', ['template']);
+};
