@@ -8,13 +8,12 @@
 			angular.module('testbed', ['html-palette'])
 				.controller('TestbedController', ['$scope', function($scope){
 					window.scope = $scope;
-					$scope.fields = {color: '000000'};
+					$scope.fields = {color: 'deadbf'};
 				}]);
 		</script>
 	</head>
 	<body>
 		<div ng-app='testbed' ng-controller='TestbedController'>
-			<input type='button' value='Pick my color' ng-style='{"color": "#"+fields.color}'/>
 			<html-palette hex-color='fields.color'></html-palette>
 		</div>
 	</body>

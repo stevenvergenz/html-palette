@@ -157,17 +157,21 @@
 	].join('\n');
 
 
-	var Palette = function(elem, opts)
+	var Palette = function(triggerElem, opts)
 	{
-		this.selection = {};
+		// add new color picker to the dom
+		this.elem = document.createElement('div');
+		this.elem.setAttribute('class', 'htmlPalette');
+		this.elem.innerHTML = template;
+		document.body.appendChild(this.elem);
 
-		this.elem = elem;
-		this.canvas = elem.querySelector('canvas');
+		this.selection = {};
+		this.canvas = this.elem.querySelector('canvas');
 		this.gl = this.canvas.getContext('webgl');
 		var gl = this.gl;
 
 		// size the canvas
-		var style = window.getComputedStyle(elem.querySelector('.palette'));
+		var style = window.getComputedStyle(this.elem.querySelector('.palette'));
 		var w = parseInt(style.width), h = parseInt(style.height)-1;
 		this.canvas.width = w;
 		this.canvas.height = h;
@@ -175,22 +179,13 @@
 
 		// size the overlay
 		var paletteWidth = w-30;
-		var twoaxis = elem.querySelector('.twoaxis');
-		var oneaxis = elem.querySelector('.oneaxis')
+		var twoaxis = this.elem.querySelector('.twoaxis');
+		var oneaxis = this.elem.querySelector('.oneaxis')
 		twoaxis.style.width = paletteWidth + 'px';
 		twoaxis.style.height = h + 'px';
 		oneaxis.style.height = h + 'px';
 
-		elem.style.display = 'none';
-		if( elem.previousElementSibling ){
-			elem.previousElementSibling.onclick = function(evt){
-				elem.style.display = elem.style.display ? '' : 'none';
-				elem.style.left = evt.x+15+'px';
-				elem.style.top = evt.y+15+'px';
-				console.log(evt);
-			}
-		}
-
+		this.elem.style.display = 'none';
 
 
 		/********************************
@@ -253,6 +248,13 @@
 
 		var self = this;
 
+		triggerElem.addEventListener('click', function(evt){
+			self.elem.style.display = self.elem.style.display ? '' : 'none';
+			self.elem.style.left = evt.x+15+'px';
+			self.elem.style.top = evt.y+15+'px';
+			console.log(evt);
+		});
+
 		twoaxis.ondragstart = function(evt){
 			evt.dataTransfer.setDragImage(document.createElement('div'),0,0);
 		}
@@ -301,9 +303,9 @@
 			}
 		}
 
-		bindRGBElement(elem.querySelector('.r'), 'r');
-		bindRGBElement(elem.querySelector('.g'), 'g');
-		bindRGBElement(elem.querySelector('.b'), 'b');
+		bindRGBElement(this.elem.querySelector('.r'), 'r');
+		bindRGBElement(this.elem.querySelector('.g'), 'g');
+		bindRGBElement(this.elem.querySelector('.b'), 'b');
 	}
 
 	Palette.prototype.redraw = function()
@@ -384,6 +386,7 @@
 		this.colorCallback = cb;
 	}
 
+
 	if(angular)
 	{
 		var app = angular.module('html-palette', []);
@@ -391,8 +394,7 @@
 		app.directive('htmlPalette', ['$timeout', function($timeout)
 		{
 			return {
-				restrict: 'E',
-				template: template,
+				restrict: 'AE',
 				scope: {
 					hsvColor: '=',
 					rgbColor: '=',
@@ -406,12 +408,17 @@
 					if($scope.hsvColor)
 					{
 						palette.setColorCallback(function(color){
-							if(!dToW){
+							if(!dToW)
+							{
 								wToD = true;
 								console.log('wToD');
 								$scope.hsvColor.h = color.h;
 								$scope.hsvColor.s = color.s;
 								$scope.hsvColor.v = color.v;
+
+								if(!attrs.suppressBgColor)
+									elem[0].style['background-color'] = '#'+color.hex;
+
 								$timeout(function(){
 									$scope.$apply();
 									wToD = false;
@@ -427,16 +434,23 @@
 								dToW = false;
 							}
 						});
+						
+						palette.color($scope.hsvColor);
 					}
 
 					else if($scope.rgbColor)
 					{
 						palette.setColorCallback(function(color){
-							if(!dToW){
+							if(!dToW)
+							{
 								wToD = true;
 								$scope.rgbColor.r = color.r;
 								$scope.rgbColor.g = color.g;
 								$scope.rgbColor.b = color.b;
+
+								if(!attrs.suppressBgColor)
+									elem[0].style['background-color'] = '#'+color.hex;
+
 								$timeout(function(){
 									$scope.$apply();
 									wToD = false;
@@ -451,6 +465,8 @@
 								dToW = false;
 							}
 						});
+
+						palette.color($scope.rgbColor);
 					}
 
 					else if($scope.hexColor)
@@ -459,6 +475,10 @@
 							if(!dToW){
 								wToD = true;
 								$scope.hexColor = color.hex;
+
+								if(!attrs.suppressBgColor)
+									elem[0].style['background-color'] = '#'+color.hex;
+
 								$timeout(function(){
 									$scope.$apply();
 									wToD = false;
@@ -473,6 +493,8 @@
 								dToW = false;
 							}
 						});
+
+						palette.color($scope.hexColor);
 					}
 
 					palette.redraw();
