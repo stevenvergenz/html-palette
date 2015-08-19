@@ -179,6 +179,7 @@
 
 		this.colorCallback = opts.colorCallback || null;
 		this.popupEdge = opts.popupEdge || 'se';
+		this.radial = opts.radial || false;
 
 		this.selection = {};
 		this.canvas = this.elem.querySelector('canvas');
@@ -230,7 +231,7 @@
 		}
 
 		// link shaders
-		var program = gl.createProgram();
+		var program = this._program = gl.createProgram();
 		gl.attachShader(program, vert);
 		gl.attachShader(program, frag);
 		gl.linkProgram(program);
@@ -260,7 +261,6 @@
 		gl.uniform1f(gl.getUniformLocation(program, 'swatchWidth'), 20);
 		gl.uniform1f(gl.getUniformLocation(program, 'marginWidth'), 10);
 		gl.uniform2f(gl.getUniformLocation(program, 'windowDimensions'), w,h);
-		gl.uniform1i(gl.getUniformLocation(program, 'radial'), !!opts.radial);
 
 		gl.clearColor(0.0, 0.0, 0.0, 0.0);
 		this.color(opts.initialColor || 'aaaaaa');
@@ -272,7 +272,7 @@
 		}
 
 		twoaxis.ondrag = twoaxis.onmousedown = function(evt){
-			if( opts.radial ){
+			if( self.radial ){
 				var center = [paletteWidth/2, h/2];
 				var clickDiff = [evt.offsetX-1 - center[0], -(evt.offsetY-1) + center[1]];
 				var hue = Math.atan2(clickDiff[1], clickDiff[0])/(2*Math.PI) + 0.5;
@@ -365,6 +365,7 @@
 
 	Palette.prototype.redraw = function()
 	{
+		this.gl.uniform1i(this.gl.getUniformLocation(this._program, 'radial'), !!this.radial);
 		this.gl.uniform3f(this.selectionUniform, this.selection.h, this.selection.s, this.selection.v);
 
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT);
@@ -449,6 +450,83 @@
 
 
 	window.HtmlPalette = Palette;
+
+	if(jQuery)
+	{
+		jQuery.fn.extend({
+			'htmlPalette': function(cmd)
+			{
+				var args = Array.prototype.slice.call(arguments, 1);
+				var palette = this.data('htmlPalette');
+
+				console.log(this);
+
+				// when in doubt, return the palette object
+				if(!cmd)
+					return palette;
+
+				// initialize
+				else if(cmd instanceof Object)
+				{
+					if(palette)
+						palette.destroy();
+
+					palette = this.data('htmlPalette', new Palette(this[0], cmd));
+					if(palette.colorCallback)
+						palette.colorCallback = palette.colorCallback.bind(this);
+				}
+
+				// error on command without initialization
+				else if(!palette) {
+					throw new Error('HtmlPalette is uninitialized on this element');
+				}
+
+				// evaluate command
+				else switch(cmd)
+				{
+					case 'color':
+						if(args.length)
+							palette.color(args[0]);
+						else
+							return palette.color();
+						break;
+
+					case 'colorCallback':
+						if(args.length)
+							palette.setColorCallback(args[0].bind(this));
+						else
+							return palette.colorCallback;
+						break;
+
+					case 'popupEdge':
+						if(args.length)
+							palette.popupEdge = args[0];
+						else
+							return palette.popupEdge;
+						break;
+
+					case 'radial':
+						if(args.length){
+							palette.radial = args[0];
+							palette.redraw();
+						}
+						else
+							return palette.radial;
+						break;
+
+					case 'redraw':
+						palette.redraw();
+						break;
+
+					case 'destroy':
+						palette.destroy();
+						this.data('htmlPalette', null);
+						break;
+				}
+			}
+		});
+	}
+
 
 	if(angular)
 	{
@@ -559,6 +637,10 @@
 					}
 
 					palette.redraw();
+
+					elem.bind('$destroy', function(){
+						palette.destroy();
+					});
 				}
 			};
 		}]);

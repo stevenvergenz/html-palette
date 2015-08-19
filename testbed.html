@@ -3,6 +3,7 @@
 	<head>
 		<link rel='stylesheet' href='palette.css'/>
 		<script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.min.js'></script>
+		<script src='https://code.jquery.com/jquery-2.1.4.js'></script>
 		<script src='palette.js'></script>
 		<script>
 			angular.module('testbed', ['html-palette'])
@@ -19,18 +20,33 @@
 			<html-palette hex-color='fields.color'></html-palette>
 		</div>
 
-		<p>This picker is in Vanilla.js:</p>
-		<div id='classicPicker' class='html-palette'></div>
-		<script>
-			var palette = new HtmlPalette( document.getElementById('classicPicker'), {
-				radial: true,
-				popupEdge: 'e',
-				initialColor: {h: 0.3, s: 0.8, v: 0.8},
-				colorCallback: function(color){
-					document.getElementById('classicPicker').style['background-color'] = '#'+color.hex;
-				}
-			});
-		</script>
+		<div>
+			<p>This picker is in Vanilla.js:</p>
+			<div id='classicPicker' class='html-palette'></div>
+			<script>
+				var palette = new HtmlPalette( document.getElementById('classicPicker'), {
+					radial: true,
+					popupEdge: 'e',
+					initialColor: {h: 0.3, s: 0.8, v: 0.8},
+					colorCallback: function(color){
+						document.getElementById('classicPicker').style['background-color'] = '#'+color.hex;
+					}
+				});
+			</script>
+		</div>
 
+		<div>
+			<p>This picker is implemented with jQuery:</p>
+			<div id='jqPicker' class='html-palette'></div>
+			<script>
+				$('#jqPicker').htmlPalette({
+					popupEdge: 'ne',
+					initialColor: {r: 0.7, g: 0.7, b: 1.0},
+					colorCallback: function(color){
+						$(this.triggerElem).css('background-color', '#'+color.hex);
+					}
+				});
+			</script>
+		</div>
 	</body>
 </html>
