@@ -173,6 +173,10 @@
 		this.elem.onclick = function(e){ e.stopPropagation(); }
 		document.body.appendChild(this.elem);
 
+		this.triggerElem = triggerElem;
+		this.onclick = Palette.onclick.bind(this);
+		this.triggerElem.addEventListener('click', this.onclick);
+
 		this.colorCallback = opts.colorCallback || null;
 		this.popupEdge = opts.popupEdge || 'se';
 
@@ -263,51 +267,6 @@
 
 		var self = this;
 
-		triggerElem.addEventListener('click', function(evt)
-		{
-			evt.stopPropagation();
-
-			var list = document.querySelectorAll('.htmlPalette');
-			for(var i=0; i<list.length; i++)
-			{
-				if(list.item(i) !== self.elem || !self.elem.style.display){
-					list.item(i).style.display = 'none';
-				}
-				else
-				{
-					var offset = 20;
-
-					// fall back on sw on missing or invalid option
-					if( !/^[ns]?[we]?$/.test(self.popupEdge) || !self.popupEdge )
-						self.popupEdge = 'se';
-
-					// set position vertically
-					if(/^n/.test(self.popupEdge)){
-						self.elem.style.top = evt.clientY - self.popupHeight - offset + 'px';
-					}
-					else if(/^s/.test(self.popupEdge)){
-						self.elem.style.top = evt.clientY + offset + 'px';
-					}
-					else {
-						self.elem.style.top = evt.clientY - self.popupHeight/2 + 'px';
-					}
-
-					// set position horizontally
-					if(/e$/.test(self.popupEdge)){
-						self.elem.style.left = evt.clientX + offset + 'px';
-					}
-					else if(/w$/.test(self.popupEdge)){
-						self.elem.style.left = evt.clientX - self.popupWidth - offset + 'px';
-					}
-					else {
-						self.elem.style.left = evt.clientX - self.popupWidth/2 + 'px';
-					}
-
-					self.elem.style.display = '';
-				}
-			}
-		});
-
 		twoaxis.ondragstart = function(evt){
 			evt.dataTransfer.setDragImage(document.createElement('div'),0,0);
 		}
@@ -359,6 +318,49 @@
 		bindRGBElement(this.elem.querySelector('.r'), 'r');
 		bindRGBElement(this.elem.querySelector('.g'), 'g');
 		bindRGBElement(this.elem.querySelector('.b'), 'b');
+	}
+
+	Palette.onclick = function(evt)
+	{
+		evt.stopPropagation();
+
+		var list = document.querySelectorAll('.htmlPalette');
+		for(var i=0; i<list.length; i++)
+		{
+			if(list.item(i) !== this.elem || !this.elem.style.display){
+				list.item(i).style.display = 'none';
+			}
+			else
+			{
+				var offset = 20;
+
+				// fall back on sw on missing or invalid option
+				if( !/^[ns]?[we]?$/.test(this.popupEdge) || !this.popupEdge )
+					this.popupEdge = 'se';
+
+				// set position vertically
+				if(/^n/.test(this.popupEdge))
+					this.elem.style.top = evt.clientY - this.popupHeight - offset + 'px';
+
+				else if(/^s/.test(this.popupEdge))
+					this.elem.style.top = evt.clientY + offset + 'px';
+
+				else
+					this.elem.style.top = evt.clientY - this.popupHeight/2 + 'px';
+
+				// set position horizontally
+				if(/e$/.test(this.popupEdge))
+					this.elem.style.left = evt.clientX + offset + 'px';
+
+				else if(/w$/.test(this.popupEdge))
+					this.elem.style.left = evt.clientX - this.popupWidth - offset + 'px';
+
+				else
+					this.elem.style.left = evt.clientX - this.popupWidth/2 + 'px';
+
+				this.elem.style.display = '';
+			}
+		}
 	}
 
 	Palette.prototype.redraw = function()
@@ -437,6 +439,12 @@
 	Palette.prototype.setColorCallback = function(cb)
 	{
 		this.colorCallback = cb;
+	}
+
+	Palette.prototype.destroy = function()
+	{
+		document.body.removeChild(this.elem);
+		this.triggerElem.removeEventListener('click', this.onclick)
 	}
 
 
