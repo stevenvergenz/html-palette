@@ -9,10 +9,11 @@ module.exports = function(grunt)
 			dist: {
 				options: {
 					style: 'compressed',
-					loadPath: libpath.join(__dirname, 'src')
+					loadPath: libpath.join(__dirname, 'src'),
+					sourcemap: 'none'
 				},
 				files: {
-					'build/palette.css': 'src/palette.scss'
+					'build/palette.css': ['src/palette.scss']
 				}
 			}
 		},
@@ -37,10 +38,10 @@ module.exports = function(grunt)
 			processRoot: {
 				options: {
 					screwIE8: true,
-					banner: 'HtmlPalette v<%= pkg.version %>'
+					banner: '/* <%= pkg.name %> v<%= pkg.version %> - built on <%= grunt.template.today("yyyy-mm-dd") %> */\n'
 				},
 				files: {
-					'build/html-palette.js': 'build/html-palette.min.js'
+					'build/html-palette.min.js': ['build/html-palette.js']
 				}
 			}
 		}

@@ -1,6 +1,6 @@
 {
-  "name": "htmlPalette",
-  "version": "0.0.0",
+  "name": "html-palette",
+  "version": "0.9.0",
   "description": "Color picker widget",
   "main": "palette.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "url": "git://github.com/stevenvergenz/html-palette.git"
   },
   "author": "Steven Vergenz <vergenzs@gmail.com>",
-  "license": "Apache-2",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/stevenvergenz/html-palette/issues"
   },
