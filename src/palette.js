@@ -73,6 +73,8 @@
 
 	var Palette = function(triggerElem, opts)
 	{
+		opts = opts || {};
+
 		// add new color picker to the dom
 		this.elem = document.createElement('div');
 		this.elem.setAttribute('class', 'htmlPalette');
@@ -344,11 +346,6 @@
 		this.elem.querySelector('.colorswatch').style['background-color'] = '#'+this.selection.hex;
 	}
 
-	Palette.prototype.setColorCallback = function(cb)
-	{
-		this.colorCallback = cb;
-	}
-
 	Palette.prototype.destroy = function()
 	{
 		document.body.removeChild(this.elem);
@@ -400,7 +397,7 @@
 
 					case 'colorCallback':
 						if(args.length)
-							palette.setColorCallback(args[0].bind(this));
+							palette.colorCallback = args[0].bind(this);
 						else
 							return palette.colorCallback;
 						break;
@@ -455,7 +452,7 @@
 
 					if($scope.hsvColor)
 					{
-						palette.setColorCallback(function(color){
+						palette.colorCallback = function(color){
 							if(!dToW)
 							{
 								wToD = true;
@@ -471,7 +468,7 @@
 									wToD = false;
 								});
 							}
-						});
+						};
 
 						$scope.$watchCollection('hsvColor', function(newval){
 							if(newval && !wToD){
@@ -486,7 +483,7 @@
 
 					else if($scope.rgbColor)
 					{
-						palette.setColorCallback(function(color){
+						palette.colorCallback = function(color){
 							if(!dToW)
 							{
 								wToD = true;
@@ -502,7 +499,7 @@
 									wToD = false;
 								});
 							}
-						});
+						};
 
 						$scope.$watchCollection('rgbColor', function(newval){
 							if(newval && !wToD){
@@ -517,7 +514,7 @@
 
 					else if($scope.hexColor)
 					{
-						palette.setColorCallback(function(color){
+						palette.colorCallback = function(color){
 							if(!dToW){
 								wToD = true;
 								$scope.hexColor = color.hex;
@@ -530,7 +527,7 @@
 									wToD = false;
 								});
 							}
-						});
+						};
 
 						$scope.$watch('hexColor', function(newval){
 							if(newval && !wToD){
