@@ -2,7 +2,7 @@
 
 An HTML5 color picker designed to be intuitive and easy to use. Comes in square and radial versions.
 
-[Live demo](https://stevenvergenz.github.io/html-palette/) [Minified](./build/html-palette.min.js) [Uncompressed](./build/html-palette.js)
+[Live demo](https://stevenvergenz.github.io/html-palette/) [Minified](https://raw.githubusercontent.com/stevenvergenz/html-palette/master/build/html-palette.min.js) [Uncompressed](https://raw.githubusercontent.com/stevenvergenz/html-palette/master/build/html-palette.js)
 
 ![Square picker](./docs/palette-square.png) ![Radial picker](./docs/palette-radial.png)
 
@@ -61,29 +61,36 @@ The constructor for HtmlPalette has three forms, depending on what library you w
 
 * **Vanilla Javascript**:
 
-	```
+	Construct an instance, and interact with it directly.
+
+	```javascript
 	var palette = new HtmlPalette(trigger, options);
+	palette.destroy();
 	```
 
 * **jQuery**:
-	
-	```
+
+	Initialize and interact using the jQuery extension.
+
+	```javascript
 	$(trigger).HtmlPalette(options);
+	$(trigger).HtmlPalette('radial', true);
+	$(trigger).HtmlPalette('destroy');
 	```
 
 * **Angular.js**:
 
 	The picker takes the form of a directive, so you can add it straight into your HTML, no Javascript required. The scope variable referred to by one of the attributes `hsv-color`, `rgb-color`, or `hex-color` (use only one) is bi-directionally bound to the picker's selected color, in the format specified by the attribute. Additional attributes are mapped to options in the usual Angular fashion: hyphenated to camel-case.
 
-	```
-	<html-palette hex-color='myColor'></html-palette>
+	```html
+	<html-palette hex-color='myColor' popup-edge='nw'></html-palette>
 	```
 
 ## Color Representations
 
 This library uses three different representations for colors:
 
-* 24-bit hexidecimal, e.g. `ffcc00`
+* 24-bit hexidecimal string, e.g. `'ffcc00'`
 * RGB object, with channel values in interval [0,1], e.g. `{r:1, b:0.75, g:0}`
 * HSV object, with channel values in interval [0,1], e.g. `{h:0, s:0.75, v:0.8}`
 
