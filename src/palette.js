@@ -361,10 +361,10 @@
 	if(jQuery)
 	{
 		jQuery.fn.extend({
-			'htmlPalette': function(cmd)
+			'HtmlPalette': function(cmd)
 			{
 				var args = Array.prototype.slice.call(arguments, 1);
-				var palette = this.data('htmlPalette');
+				var palette = this.data('HtmlPalette');
 
 				console.log(this);
 
@@ -378,7 +378,7 @@
 					if(palette)
 						palette.destroy();
 
-					palette = this.data('htmlPalette', new Palette(this[0], cmd));
+					palette = this.data('HtmlPalette', new Palette(this[0], cmd));
 					if(palette.colorCallback)
 						palette.colorCallback = palette.colorCallback.bind(this);
 				}
