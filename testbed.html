@@ -8,7 +8,7 @@
 			angular.module('testbed', ['html-palette'])
 				.controller('TestbedController', ['$scope', function($scope){
 					window.scope = $scope;
-					$scope.fields = {color: 'deadbf'};
+					$scope.fields = {color: 'deadbf', radial: false};
 				}]);
 
 		</script>
@@ -16,7 +16,7 @@
 	<body>
 		<div id='angularPicker' ng-app='testbed' ng-controller='TestbedController'>
 			<p>This picker is implemented with an Angular.js directive:</p>
-			<html-palette hex-color='fields.color'></html-palette>
+			<html-palette radial='fields.radial' hex-color='fields.color'></html-palette>
 		</div>
 
 		<div>
@@ -38,7 +38,7 @@
 			<p>This picker is implemented with jQuery:</p>
 			<div id='jqPicker' class='html-palette'></div>
 			<script>
-				$('#jqPicker').htmlPalette({
+				$('#jqPicker').HtmlPalette({
 					popupEdge: 'ne',
 					initialColor: {r: 0.7, g: 0.7, b: 1.0},
 					colorCallback: function(color){

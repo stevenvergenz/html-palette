@@ -58,6 +58,11 @@
 	var vertShaderSrc = '<%= vertShader %>';
 	var fragShaderSrc = '<%= fragShader %>';
 
+	var styleTag = document.createElement('style');
+	styleTag.type = 'text/css';
+	styleTag.innerHTML = '<%= styles %>';
+	document.head.appendChild(styleTag);
+
 	document.addEventListener('click', function(evt)
 	{
 		var list = document.querySelectorAll('.htmlPalette');
@@ -65,11 +70,6 @@
 			if(list.item(i) !== self.elem) list.item(i).style.display = 'none';
 		}
 	});
-
-	var styleTag = document.createElement('style');
-	styleTag.type = 'text/css';
-	styleTag.innerHTML = '<%= styles %>';
-	document.head.appendChild(styleTag);
 
 	var Palette = function(triggerElem, opts)
 	{
@@ -233,6 +233,12 @@
 	{
 		evt.stopPropagation();
 
+		var box = this.triggerElem.getBoundingClientRect();
+		var origin = {
+			x: (box.left+box.right)/2,
+			y: (box.top+box.bottom)/2
+		};
+
 		var list = document.querySelectorAll('.htmlPalette');
 		for(var i=0; i<list.length; i++)
 		{
@@ -249,23 +255,23 @@
 
 				// set position vertically
 				if(/^n/.test(this.popupEdge))
-					this.elem.style.top = evt.clientY - this._popupHeight - offset + 'px';
+					this.elem.style.top = origin.y - this._popupHeight - offset + 'px';
 
 				else if(/^s/.test(this.popupEdge))
-					this.elem.style.top = evt.clientY + offset + 'px';
+					this.elem.style.top = origin.y + offset + 'px';
 
 				else
-					this.elem.style.top = evt.clientY - this._popupHeight/2 + 'px';
+					this.elem.style.top = origin.y - this._popupHeight/2 + 'px';
 
 				// set position horizontally
 				if(/e$/.test(this.popupEdge))
-					this.elem.style.left = evt.clientX + offset + 'px';
+					this.elem.style.left = origin.x + offset + 'px';
 
 				else if(/w$/.test(this.popupEdge))
-					this.elem.style.left = evt.clientX - this._popupWidth - offset + 'px';
+					this.elem.style.left = origin.x - this._popupWidth - offset + 'px';
 
 				else
-					this.elem.style.left = evt.clientX - this._popupWidth/2 + 'px';
+					this.elem.style.left = origin.x - this._popupWidth/2 + 'px';
 
 				this.elem.style.display = '';
 			}
@@ -363,8 +369,6 @@
 				var args = Array.prototype.slice.call(arguments, 1);
 				var palette = this.data('HtmlPalette');
 
-				console.log(this);
-
 				// when in doubt, return the palette object
 				if(!cmd)
 					return palette;
@@ -443,12 +447,22 @@
 				scope: {
 					hsvColor: '=',
 					rgbColor: '=',
-					hexColor: '='
+					hexColor: '=',
+					radial: '='
 				},
 				link: function($scope, elem, attrs)
 				{
 					var palette = new Palette(elem[0], attrs);
 					var dToW = false, wToD = false;
+
+					$scope.$watch('radial', function(newval){
+						palette.radial = !!newval;
+						palette.redraw();
+					});
+
+					elem.bind('$destroy', function(){
+						palette.destroy();
+					});
 
 					if($scope.hsvColor)
 					{
@@ -539,12 +553,6 @@
 
 						palette.color($scope.hexColor);
 					}
-
-					palette.redraw();
-
-					elem.bind('$destroy', function(){
-						palette.destroy();
-					});
 				}
 			};
 		}]);

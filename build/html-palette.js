@@ -58,6 +58,11 @@
 	var vertShaderSrc = 'precision lowp float;\nattribute vec3 vertPosition;\nvarying vec2 windowPosition;\nuniform vec2 windowDimensions;\n\nvoid main(void)\n{\n	mat3 xform = mat3(0.5*windowDimensions.x, 0.0, 0.0, 0.0, 0.5*windowDimensions.y, 0.0, windowDimensions.x/2.0, windowDimensions.y/2.0, 1.0);\n	windowPosition = (xform * vec3(vertPosition.xy, 1.0)).xy;\n	gl_Position = vec4(vertPosition,1);\n}\n\n';
 	var fragShaderSrc = 'precision lowp float;\n#define M_PI 3.141592653589\n\nvarying vec2 windowPosition;\nuniform vec3 selectedColor;\nuniform float swatchWidth;\nuniform float marginWidth;\nuniform vec2 windowDimensions;\nuniform bool radial;\n\nvec3 hsv2rgb(float h, float s, float v){\n	vec3 c = vec3(h,s,v);\n	vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\n	vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);\n	return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);\n}\n\nvec4 getSelectionColor(vec4 baseColor){\n	return vec4( vec3(1.0)-baseColor.rgb, baseColor.a );\n}\n\nvoid main(void){\n\n	float taWidth = windowDimensions.x - swatchWidth - marginWidth;\n	float aspect = taWidth / windowDimensions.y;\n	vec2 center = vec2(taWidth/2.0, windowDimensions.y/2.0);\n	vec4 color;\n	vec2 selectionPosition;\n\n	if( windowPosition.x <= taWidth )\n	{\n		if(radial){\n\n			vec2 radialVec = (windowPosition - center)*vec2(2.0/taWidth, 2.0/windowDimensions.y);\n			radialVec = mat2(max(1.0,aspect), 0.0, 0.0, max(1.0,1.0/aspect)) * radialVec;\n			if(length(radialVec) > 1.0) discard;\n			float hue = atan(radialVec.y,radialVec.x)/(2.0*M_PI) + 0.5;\n			color = vec4(hue, length(radialVec), selectedColor.z, 1.0);\n\n			float angle = (selectedColor.x-0.5)*2.0*M_PI;\n			selectionPosition = min(center.x, center.y) * selectedColor.y * vec2(cos(angle), sin(angle)) + center;\n\n		} else {\n			color = vec4(windowPosition.x/taWidth, windowPosition.y/windowDimensions.y, selectedColor.z, 1.0);\n			selectionPosition = vec2(selectedColor.x*taWidth, selectedColor.y*windowDimensions.y);\n		}\n\n		vec2 difference = selectionPosition - windowPosition;\n		float radius = length(difference);\n\n		if( radius > 4.5 && radius < 6.0 )\n			gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.x, color.y, color.z), 1.0 ));\n		else\n			gl_FragColor = vec4( hsv2rgb(color.x, color.y, color.z), 1.0);\n	}\n	else if(windowPosition.x > windowDimensions.x-swatchWidth)\n	{\n		vec4 color = vec4( selectedColor.x, selectedColor.y, windowPosition.y/windowDimensions.y, 1.0);\n\n		if( windowDimensions.y * abs(windowPosition.y/windowDimensions.y-selectedColor.z) < 1.0 )\n			gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.x, color.y, color.z), 1.0 ));\n\n		else\n			gl_FragColor = vec4( hsv2rgb(color.x, color.y, color.z), 1.0);\n	}\n	else\n		discard;\n}\n\n';
 
+	var styleTag = document.createElement('style');
+	styleTag.type = 'text/css';
+	styleTag.innerHTML = 'html-palette,.html-palette{display:inline-block;width:30px;height:30px;border:ridge lightgrey 3px}.htmlPalette{width:200px;height:200px;border:solid grey 1px;padding:5px;background-color:white;display:-webkit-box;display:-moz-flex;display:-ms-flexbox;display:-webkit-flex;display:flex;-webkit-box-orient:vertical;-moz-flex-direction:column;-ms-flex-direction:column;-webkit-flex-direction:column;flex-direction:column;position:absolute;box-sizing:border-box}.htmlPalette .palette{position:relative;padding:1px;-moz-flex-grow:1;-ms-flex:1 1;-webkit-flex-grow:1;flex-grow:1}.htmlPalette .palette .twoaxis,.htmlPalette .palette .oneaxis{position:absolute;border:solid grey 1px}.htmlPalette .palette .twoaxis{top:0px;left:0px;cursor:crosshair}.htmlPalette .palette .oneaxis{top:0px;right:0px;width:20px;margin-left:10px;cursor:ns-resize}.htmlPalette .controls{height:30px;-moz-flex-shrink:0;-ms-flex-shrink:0;-webkit-flex-shrink:0;flex-shrink:0;display:-webkit-box;display:-moz-flex;display:-ms-flexbox;display:-webkit-flex;display:flex;-webkit-box-orient:horizontal;-moz-flex-direction:row;-ms-flex-direction:row;-webkit-flex-direction:row;flex-direction:row;-webkit-box-align:stretch;-moz-align-items:stretch;-ms-flex-align:stretch;-webkit-align-items:stretch;align-items:stretch;-webkit-box-pack:justify;-moz-justify-content:space-between;-ms-flex-pack:justify;-webkit-justify-content:space-between;justify-content:space-between}.htmlPalette .controls .rgbInput{display:-webkit-box;display:-moz-flex;display:-ms-flexbox;display:-webkit-flex;display:flex;-webkit-box-align:center;-moz-align-items:center;-ms-flex-align:center;-webkit-align-items:center;align-items:center;padding-left:5px;font-size:20px;letter-spacing:1px}.htmlPalette .controls .rgbInput span{margin:0 2px;cursor:ns-resize}.htmlPalette .controls .rgbInput .r{color:red}.htmlPalette .controls .rgbInput .g{color:green}.htmlPalette .controls .rgbInput .b{color:blue}.htmlPalette .controls .colorswatch{width:25%;box-sizing:border-box;border:solid grey 1px}\n';
+	document.head.appendChild(styleTag);
+
 	document.addEventListener('click', function(evt)
 	{
 		var list = document.querySelectorAll('.htmlPalette');
@@ -65,11 +70,6 @@
 			if(list.item(i) !== self.elem) list.item(i).style.display = 'none';
 		}
 	});
-
-	var styleTag = document.createElement('style');
-	styleTag.type = 'text/css';
-	styleTag.innerHTML = 'html-palette,.html-palette{display:inline-block;width:30px;height:30px;border:ridge lightgrey 3px}.htmlPalette{width:200px;height:200px;border:solid grey 1px;padding:5px;background-color:white;display:-webkit-box;display:-moz-flex;display:-ms-flexbox;display:-webkit-flex;display:flex;-webkit-box-orient:vertical;-moz-flex-direction:column;-ms-flex-direction:column;-webkit-flex-direction:column;flex-direction:column;position:absolute;box-sizing:border-box}.htmlPalette .palette{position:relative;padding:1px;-moz-flex-grow:1;-ms-flex:1 1;-webkit-flex-grow:1;flex-grow:1}.htmlPalette .palette .twoaxis,.htmlPalette .palette .oneaxis{position:absolute;border:solid grey 1px}.htmlPalette .palette .twoaxis{top:0px;left:0px;cursor:crosshair}.htmlPalette .palette .oneaxis{top:0px;right:0px;width:20px;margin-left:10px;cursor:ns-resize}.htmlPalette .controls{height:30px;-moz-flex-shrink:0;-ms-flex-shrink:0;-webkit-flex-shrink:0;flex-shrink:0;display:-webkit-box;display:-moz-flex;display:-ms-flexbox;display:-webkit-flex;display:flex;-webkit-box-orient:horizontal;-moz-flex-direction:row;-ms-flex-direction:row;-webkit-flex-direction:row;flex-direction:row;-webkit-box-align:stretch;-moz-align-items:stretch;-ms-flex-align:stretch;-webkit-align-items:stretch;align-items:stretch;-webkit-box-pack:justify;-moz-justify-content:space-between;-ms-flex-pack:justify;-webkit-justify-content:space-between;justify-content:space-between}.htmlPalette .controls .rgbInput{display:-webkit-box;display:-moz-flex;display:-ms-flexbox;display:-webkit-flex;display:flex;-webkit-box-align:center;-moz-align-items:center;-ms-flex-align:center;-webkit-align-items:center;align-items:center;padding-left:5px;font-size:20px;letter-spacing:1px}.htmlPalette .controls .rgbInput span{margin:0 2px;cursor:ns-resize}.htmlPalette .controls .rgbInput .r{color:red}.htmlPalette .controls .rgbInput .g{color:green}.htmlPalette .controls .rgbInput .b{color:blue}.htmlPalette .controls .colorswatch{width:25%;box-sizing:border-box;border:solid grey 1px}\n';
-	document.head.appendChild(styleTag);
 
 	var Palette = function(triggerElem, opts)
 	{
@@ -233,6 +233,12 @@
 	{
 		evt.stopPropagation();
 
+		var box = this.triggerElem.getBoundingClientRect();
+		var origin = {
+			x: (box.left+box.right)/2,
+			y: (box.top+box.bottom)/2
+		};
+
 		var list = document.querySelectorAll('.htmlPalette');
 		for(var i=0; i<list.length; i++)
 		{
@@ -249,23 +255,23 @@
 
 				// set position vertically
 				if(/^n/.test(this.popupEdge))
-					this.elem.style.top = evt.clientY - this._popupHeight - offset + 'px';
+					this.elem.style.top = origin.y - this._popupHeight - offset + 'px';
 
 				else if(/^s/.test(this.popupEdge))
-					this.elem.style.top = evt.clientY + offset + 'px';
+					this.elem.style.top = origin.y + offset + 'px';
 
 				else
-					this.elem.style.top = evt.clientY - this._popupHeight/2 + 'px';
+					this.elem.style.top = origin.y - this._popupHeight/2 + 'px';
 
 				// set position horizontally
 				if(/e$/.test(this.popupEdge))
-					this.elem.style.left = evt.clientX + offset + 'px';
+					this.elem.style.left = origin.x + offset + 'px';
 
 				else if(/w$/.test(this.popupEdge))
-					this.elem.style.left = evt.clientX - this._popupWidth - offset + 'px';
+					this.elem.style.left = origin.x - this._popupWidth - offset + 'px';
 
 				else
-					this.elem.style.left = evt.clientX - this._popupWidth/2 + 'px';
+					this.elem.style.left = origin.x - this._popupWidth/2 + 'px';
 
 				this.elem.style.display = '';
 			}
@@ -363,8 +369,6 @@
 				var args = Array.prototype.slice.call(arguments, 1);
 				var palette = this.data('HtmlPalette');
 
-				console.log(this);
-
 				// when in doubt, return the palette object
 				if(!cmd)
 					return palette;
@@ -443,12 +447,22 @@
 				scope: {
 					hsvColor: '=',
 					rgbColor: '=',
-					hexColor: '='
+					hexColor: '=',
+					radial: '='
 				},
 				link: function($scope, elem, attrs)
 				{
 					var palette = new Palette(elem[0], attrs);
 					var dToW = false, wToD = false;
+
+					$scope.$watch('radial', function(newval){
+						palette.radial = !!newval;
+						palette.redraw();
+					});
+
+					elem.bind('$destroy', function(){
+						palette.destroy();
+					});
 
 					if($scope.hsvColor)
 					{
@@ -539,12 +553,6 @@
 
 						palette.color($scope.hexColor);
 					}
-
-					palette.redraw();
-
-					elem.bind('$destroy', function(){
-						palette.destroy();
-					});
 				}
 			};
 		}]);
