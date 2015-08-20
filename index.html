@@ -38,6 +38,14 @@
 				margin: 0;
 				height: 100%;
 			}
+			body {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+			h1 {
+				background-color: white;
+			}
 			html-palette
 			{
 				position: absolute;
@@ -52,6 +60,8 @@
 		</style>
 	</head>
 	<body ng-app='testbed' ng-controller='TestbedController'>
+
+		<h1><a href='https://github.com/stevenvergenz/html-palette'>HtmlPalette - An HTML5 Color Picker</a></h1>
 
 		<html-palette rgb-color='topLeftColor' suppress-bg-color='true' radial='true' style='top: 0px; left: 0px;'
 			ng-style='{"background-color": getColor(topLeftColor), color: invertColor(topLeftColor)}'>Click me!</html-palette>
