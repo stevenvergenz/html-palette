@@ -2,7 +2,7 @@
 
 ![Square picker](./docs/palette-square.png) ![Radial picker](./docs/palette-radial.png)
 
-An HTML5 color picker designed to be intuitive and easy to use. Comes in square and radial versions. [Live demo](./testbed.html).
+An HTML5 color picker designed to be intuitive and easy to use. Comes in square and radial versions. [Live demo](https://stevenvergenz.github.io/html-palette/).
 
 
 ## Example Usage
@@ -23,7 +23,7 @@ var palette = new HtmlPalette(trigger, {
 
 ```javascript
 $('#picker').HtmlPalette({
-	initialColor: '49cc29',
+	initialColor: {h:0, s:0.8, v:0.8},
 	colorCallback: function(color){
 		this.triggerElem.style['background-color'] = '#'+color.hex;
 	}
@@ -46,3 +46,5 @@ angular.module('myApp', ['html-palette'])
 	</div>
 </div>
 ```
+
+

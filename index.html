@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.min.js'></script>
+		<script src='build/html-palette.min.js'></script>
+		<script>
+
+			angular.module('testbed', ['html-palette'])
+				.controller('TestbedController', function($scope)
+				{
+					$scope.topLeftColor = {r:Math.random(), g:Math.random(), b:Math.random()};
+					$scope.bottomRightColor = {r:Math.random(), g:Math.random(), b:Math.random()};
+
+					$scope.getColor = function(color){
+						return 'rgb('+Math.round(color.r*255)+', '+Math.round(color.g*255)+', '+Math.round(color.b*255)+')';
+					}
+
+					$scope.invertColor = function(color){
+						return 'rgb('+Math.round((1-color.r)*255)+', '+Math.round((1-color.g)*255)+', '+Math.round((1-color.b)*255)+')';
+					}
+
+					$scope.$watchCollection('topLeftColor', updateGradient);
+					$scope.$watchCollection('bottomRightColor', updateGradient);
+
+					function updateGradient()
+					{
+						var nearCorner = $scope.getColor($scope.topLeftColor);
+						var farCorner = $scope.getColor($scope.bottomRightColor);
+						var angle = Math.atan2(window.innerHeight, window.innerWidth);
+
+						document.body.style['background-image'] = 'linear-gradient(to right bottom, '+nearCorner+', '+farCorner+')';
+					}
+				});
+
+		</script>
+		<style>
+			html, body {
+				margin: 0;
+				height: 100%;
+			}
+			html-palette
+			{
+				position: absolute;
+				width: 100px;
+				height: 100px;
+				margin: 5px;
+
+				font-size: 35px;
+				font-weight: bold;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body ng-app='testbed' ng-controller='TestbedController'>
+
+		<html-palette rgb-color='topLeftColor' suppress-bg-color='true' radial='true' style='top: 0px; left: 0px;'
+			ng-style='{"background-color": getColor(topLeftColor), color: invertColor(topLeftColor)}'>Click me!</html-palette>
+		<html-palette rgb-color='bottomRightColor' suppress-bg-color='true' popup-edge='nw' style='bottom: 0px; right: 0px;'
+			ng-style='{"background-color": getColor(bottomRightColor), color: invertColor(bottomRightColor)}'>Click me!</html-palette>
+
+	</body>
+</html>
