@@ -4,7 +4,7 @@ An HTML5 color picker designed to be intuitive and easy to use. Comes in square 
 
 [Live demo](https://stevenvergenz.github.io/html-palette/) [Minified](https://raw.githubusercontent.com/stevenvergenz/html-palette/master/build/html-palette.min.js) [Uncompressed](https://raw.githubusercontent.com/stevenvergenz/html-palette/master/build/html-palette.js)
 
-![Square picker](./docs/palette-square.png) ![Radial picker](./docs/palette-radial.png)
+![Square picker](./docs/palette-square.png) ![Radial picker](./docs/palette-radial.png) ![Alpha picker](./docs/palette-alpha.png)
 
 
 ## Examples
