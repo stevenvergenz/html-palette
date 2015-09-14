@@ -91,10 +91,10 @@ The constructor for HtmlPalette has three forms, depending on what library you w
 This library uses three different representations for colors:
 
 * 24-bit hexidecimal string, e.g. `'ffcc00'`
-* RGB object, with channel values in interval [0,1], e.g. `{r:1, b:0.75, g:0}`
-* HSV object, with channel values in interval [0,1], e.g. `{h:0, s:0.75, v:0.8}`
+* RGB(A) object, with channel values in interval [0,1], e.g. `{r:1, b:0.75, g:0, a:1}`
+* HSV(A) object, with channel values in interval [0,1], e.g. `{h:0, s:0.75, v:0.8}`
 
-Any of these representations can be passed into the `initialColor` option or `color` setter method, and the other representations will be computed and provided to the color callback. 
+Alpha value is initialized to 1.0 unless specified. Any of these representations can be passed into the `initialColor` option or `color` setter method, and the other representations will be computed and provided to the color callback.
 
 
 ## Options/Properties
@@ -117,6 +117,14 @@ Determines where the picker will appear relative to the trigger element. Can be 
 
 If `false`, the color picker is drawn as a rectangle, with hue varying on the x axis and saturation varying on the y axis. If `true`, it is drawn as a circle, with hue varying with the angle and saturation varying with the radius.
 
+### updateTriggerBg
+
+*Type*: `boolean`
+
+*Default*: `false`
+
+When enabled, the picker trigger element's `background-color` style will be changed to the current selection color, with a checker pattern to indicate transparency if applicable.
+
 ### colorCallback
 
 *Type*: `function(color)`
@@ -133,13 +141,13 @@ A function called when the selected color changes, either from picker events or 
 
 The initial color selection of the picker. The color callback will be called once on initalization with this color, if a callback is provided.
 
-### suppressBgColor (Angular.js attribute only)
+### useAlpha (constructor option, read-only)
 
 *Type*: `boolean`
 
 *Default*: `false`
 
-By default, the picker trigger element's `background-color` style will be changed to the current selection. When this option is truthy, the trigger element style is not updated with the selection.
+If specified, the widget controls will include a slider for the alpha channel.
 
 ## Other Instance Properties
 

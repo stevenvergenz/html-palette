@@ -31,9 +31,7 @@
 					popupEdge: 'e',
 					initialColor: {h: 0.3, s: 0.8, v: 0.8},
 					useAlpha: true,
-					colorCallback: function(color){
-						document.getElementById('classicPicker').style['background-color'] = '#'+color.hex;
-					}
+					updateTriggerBg: true
 				});
 			</script>
 		</div>
@@ -45,9 +43,7 @@
 				$('#jqPicker').HtmlPalette({
 					popupEdge: 'ne',
 					initialColor: {r: 0.7, g: 0.7, b: 1.0},
-					colorCallback: function(color){
-						$(this.triggerElem).css('background-color', '#'+color.hex);
-					}
+					updateTriggerBg: true
 				});
 			</script>
 		</div>
