@@ -534,7 +534,7 @@
 						palette.destroy();
 					});
 
-					if($scope.hsvColor)
+					if(attrs.hsvColor)
 					{
 						palette.colorCallback = function(color){
 							if(!dToW)
@@ -563,7 +563,7 @@
 						palette.color($scope.hsvColor);
 					}
 
-					else if($scope.rgbColor)
+					else if(attrs.rgbColor)
 					{
 						palette.colorCallback = function(color){
 							if(!dToW)
@@ -592,7 +592,7 @@
 						palette.color($scope.rgbColor);
 					}
 
-					else if($scope.hexColor)
+					else if(attrs.hexColor)
 					{
 						palette.colorCallback = function(color){
 							if(!dToW){
