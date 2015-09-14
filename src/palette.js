@@ -57,6 +57,7 @@
 	var template = '<%= widgetTemplate %>';
 	var vertShaderSrc = '<%= vertShader %>';
 	var fragShaderSrc = '<%= fragShader %>';
+	var transparencyBgUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAK0lEQVQoz2Pcu3cvAzbg5OSEVZyJgUQwqoEYwPj//3+sEvv27RsNJfppAAD+GAhT8tRPqwAAAABJRU5ErkJggg==';
 
 	var styleTag = document.createElement('style');
 	styleTag.type = 'text/css';
@@ -89,6 +90,8 @@
 		this.colorCallback = opts.colorCallback || null;
 		this.popupEdge = opts.popupEdge || 'se';
 		this.radial = opts.radial || false;
+		this.useAlpha = opts.useAlpha || false;
+		this.updateTriggerBg = opts.updateTriggerBg !== undefined ? opts.updateTriggerBg : true;
 
 		this.selection = {};
 		this._canvas = this.elem.querySelector('canvas');
@@ -227,6 +230,7 @@
 		bindRGBElement(this.elem.querySelector('.r'), 'r');
 		bindRGBElement(this.elem.querySelector('.g'), 'g');
 		bindRGBElement(this.elem.querySelector('.b'), 'b');
+		bindRGBElement(this.elem.querySelector('.a'), 'a');
 	}
 
 	Palette.onclick = function(evt)
@@ -289,12 +293,17 @@
 
 	Palette.prototype.color = function(val)
 	{
-		if(val && (val.h!==undefined || val.s!==undefined || val.v!==undefined))
+		if(this.selection.a === undefined) this.selection.a = 1.0;
+		if(val && val.a !== undefined) this.selection.a = val.a;
+
+		if(!val){
+			return this.selection;
+		}
+		else if(val.h!==undefined || val.s!==undefined || val.v!==undefined)
 		{
 			if(val.h !== undefined) this.selection.h = val.h;
 			if(val.s !== undefined) this.selection.s = val.s;
 			if(val.v !== undefined) this.selection.v = val.v;
-			this.redraw();
 
 			var rgb = hsvToRgb(this.selection.h, this.selection.s, this.selection.v);
 			this.selection.r = Math.max(rgb.r, 0);
@@ -305,10 +314,8 @@
 				('00'+Math.round(this.selection.r*255).toString(16)).slice(-2)
 				+('00'+Math.round(this.selection.g*255).toString(16)).slice(-2)
 				+('00'+Math.round(this.selection.b*255).toString(16)).slice(-2)
-
-			if(this.colorCallback) this.colorCallback(this.selection);
 		}
-		else if(val && (val.r!==undefined || val.g!==undefined || val.b!==undefined))
+		else if(val.r!==undefined || val.g!==undefined || val.b!==undefined)
 		{
 			if(val.r !== undefined) this.selection.r = val.r;
 			if(val.g !== undefined) this.selection.g = val.g;
@@ -319,14 +326,11 @@
 			this.selection.h = hsv.h;
 			this.selection.s = hsv.s;
 			this.selection.v = hsv.v;
-			this.redraw();
 
 			this.selection.hex =
 				('00'+Math.round(this.selection.r*255).toString(16)).slice(-2)
 				+('00'+Math.round(this.selection.g*255).toString(16)).slice(-2)
 				+('00'+Math.round(this.selection.b*255).toString(16)).slice(-2)
-
-			if(this.colorCallback) this.colorCallback(this.selection);
 		}
 		else if( /^[0-9A-Fa-f]{6}$/.test(val) )
 		{
@@ -341,15 +345,29 @@
 			this.selection.h = hsv.h;
 			this.selection.s = hsv.s;
 			this.selection.v = hsv.v;
+
+		}
+
+		if(val)
+		{
 			this.redraw();
+
+			this.elem.querySelector('.rgbInput .r').innerHTML = this.selection.hex.slice(0,2);
+			this.elem.querySelector('.rgbInput .g').innerHTML = this.selection.hex.slice(2,4);
+			this.elem.querySelector('.rgbInput .b').innerHTML = this.selection.hex.slice(4,6);
+			this.elem.querySelector('.rgbInput .a').innerHTML = ('00'+Math.round(this.selection.a*255).toString(16)).slice(-2);
+
+			var rgba = [Math.round(this.selection.r*255), Math.round(this.selection.g*255), Math.round(this.selection.b*255), this.selection.a];
+			rgba = 'rgba('+rgba.join(',')+')';
+			this.elem.querySelector('.colorswatch').style['background'] =
+				'linear-gradient('+rgba+','+rgba+'), url('+transparencyBgUrl+')';
+
+			if(this.updateTriggerBg){
+				this.triggerElem.style['background'] = 'linear-gradient('+rgba+','+rgba+'), url('+transparencyBgUrl+')';
+			}
 
 			if(this.colorCallback) this.colorCallback(this.selection);
 		}
-
-		this.elem.querySelector('.rgbInput .r').innerHTML = this.selection.hex.slice(0,2);
-		this.elem.querySelector('.rgbInput .g').innerHTML = this.selection.hex.slice(2,4);
-		this.elem.querySelector('.rgbInput .b').innerHTML = this.selection.hex.slice(4,6);
-		this.elem.querySelector('.colorswatch').style['background-color'] = '#'+this.selection.hex;
 	}
 
 	Palette.prototype.destroy = function()
@@ -473,6 +491,7 @@
 								$scope.hsvColor.h = color.h;
 								$scope.hsvColor.s = color.s;
 								$scope.hsvColor.v = color.v;
+								$scope.hsvColor.a = color.a;
 
 								if(!attrs.suppressBgColor)
 									elem[0].style['background-color'] = '#'+color.hex;
@@ -504,6 +523,7 @@
 								$scope.rgbColor.r = color.r;
 								$scope.rgbColor.g = color.g;
 								$scope.rgbColor.b = color.b;
+								$scope.rgbColor.a = color.a;
 
 								if(!attrs.suppressBgColor)
 									elem[0].style['background-color'] = '#'+color.hex;

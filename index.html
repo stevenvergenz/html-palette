@@ -9,6 +9,7 @@
 			angular.module('testbed', ['html-palette'])
 				.controller('TestbedController', function($scope)
 				{
+					window.scope = $scope;
 					$scope.topLeftColor = {r:Math.random(), g:Math.random(), b:Math.random()};
 					$scope.bottomRightColor = {r:Math.random(), g:Math.random(), b:Math.random()};
 

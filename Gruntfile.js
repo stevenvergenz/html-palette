@@ -17,8 +17,19 @@ module.exports = function(grunt)
 				}
 			}
 		},
+		dataUri: {
+			dist: {
+				src: ['build/palette.css'],
+				dest: 'build',
+				options: {
+					target: ['src/*.*'],
+					baseDir: './src',
+					maxBytes: 2048
+				}
+			}
+		},
 		template: {
-			processRoot: {
+			dist: {
 				options: {
 					data: function(){
 						return {
@@ -35,7 +46,7 @@ module.exports = function(grunt)
 			}
 		},
 		uglify: {
-			processRoot: {
+			dist: {
 				options: {
 					screwIE8: true,
 					banner: '/* <%= pkg.name %> v<%= pkg.version %> - built on <%= grunt.template.today("yyyy-mm-dd") %> */\n'
@@ -48,7 +59,8 @@ module.exports = function(grunt)
 	});
 
 	grunt.loadNpmTasks('grunt-contrib-sass');
+	grunt.loadNpmTasks('grunt-data-uri');
 	grunt.loadNpmTasks('grunt-template');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
-	grunt.registerTask('default', ['sass', 'template', 'uglify']);
+	grunt.registerTask('default', ['sass', 'dataUri', 'template', 'uglify']);
 };
