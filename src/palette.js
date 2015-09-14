@@ -92,6 +92,7 @@
 		this.radial = opts.radial || false;
 		this.useAlpha = opts.useAlpha || false;
 		this.updateTriggerBg = opts.updateTriggerBg !== undefined ? opts.updateTriggerBg : true;
+		this.disabled = opts.disabled || false;
 
 		this.selection = {};
 		this._canvas = this.elem.querySelector('canvas');
@@ -266,6 +267,8 @@
 	Palette.onclick = function(evt)
 	{
 		evt.stopPropagation();
+
+		if(this.disabled) return;
 
 		var box = this.triggerElem.getBoundingClientRect();
 		var origin = {
@@ -477,6 +480,13 @@
 							return palette.updateTriggerBg;
 						break;
 
+					case 'disabled':
+						if(args.length)
+							palette.disabled = args[0];
+						else
+							return palette.disabled;
+						break;
+
 					case 'redraw':
 						palette.redraw();
 						break;
@@ -503,7 +513,8 @@
 					hsvColor: '=',
 					rgbColor: '=',
 					hexColor: '=',
-					radial: '='
+					radial: '=',
+					disabled: '='
 				},
 				link: function($scope, elem, attrs)
 				{
@@ -513,6 +524,10 @@
 					$scope.$watch('radial', function(newval){
 						palette.radial = !!newval;
 						palette.redraw();
+					});
+
+					$scope.$watch('disabled', function(newval){
+						palette.disabled = !!newval;
 					});
 
 					elem.bind('$destroy', function(){

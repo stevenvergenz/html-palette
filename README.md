@@ -101,6 +101,22 @@ Alpha value is initialized to 1.0 unless specified. Any of these representations
 
 All options are also available for read/write on the resulting HtmlPalette instance, with exceptions noted.
 
+### colorCallback
+
+*Type*: `function(color)`
+
+*Default*: `null`
+
+A function called when the selected color changes, either from picker events or a call to the `color` setter function.
+
+### disabled
+
+*Type*: `boolean`
+
+*Default*: `false`
+
+When disabled the trigger will not bring up the color picker when clicked.
+
 ### popupEdge
 
 *Type*: `String`
@@ -124,14 +140,6 @@ If `false`, the color picker is drawn as a rectangle, with hue varying on the x 
 *Default*: `false`
 
 When enabled, the picker trigger element's `background-color` style will be changed to the current selection color, with a checker pattern to indicate transparency if applicable.
-
-### colorCallback
-
-*Type*: `function(color)`
-
-*Default*: `null`
-
-A function called when the selected color changes, either from picker events or a call to the `color` setter function.
 
 ### initialColor (constructor option only)
 
