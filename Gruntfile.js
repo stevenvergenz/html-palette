@@ -17,17 +17,6 @@ module.exports = function(grunt)
 				}
 			}
 		},
-		dataUri: {
-			dist: {
-				src: ['build/palette.css'],
-				dest: 'build',
-				options: {
-					target: ['src/*.*'],
-					baseDir: './src',
-					maxBytes: 2048
-				}
-			}
-		},
 		template: {
 			dist: {
 				options: {
@@ -59,8 +48,7 @@ module.exports = function(grunt)
 	});
 
 	grunt.loadNpmTasks('grunt-contrib-sass');
-	grunt.loadNpmTasks('grunt-data-uri');
 	grunt.loadNpmTasks('grunt-template');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
-	grunt.registerTask('default', ['sass', 'dataUri', 'template', 'uglify']);
+	grunt.registerTask('default', ['sass', 'template', 'uglify']);
 };
