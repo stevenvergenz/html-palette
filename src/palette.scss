@@ -28,7 +28,7 @@ html-palette, .html-palette
 		padding: 1px;
 		@include flex-grow(1);
 
-		.twoaxis, .oneaxis
+		.twoaxis, .oneaxis, .alpha
 		{
 			position: absolute;
 			border: solid grey 1px;
@@ -36,7 +36,7 @@ html-palette, .html-palette
 
 		.twoaxis {
 			top: 0px;
-			left: 0px;
+			left: 30px;
 			cursor: crosshair;
 		}
 
@@ -48,6 +48,13 @@ html-palette, .html-palette
 			cursor: ns-resize;
 		}
 
+		.alpha {
+			top: 0px;
+			left: 0px;
+			width: 20px;
+			margin-right: 10px;
+			cursor: ns-resize;
+		}
 	}
 
 	.controls

@@ -110,15 +110,22 @@
 		gl.viewport(0, 0, w, h);
 
 		// size the overlay
-		var paletteWidth = w-30;
+		var paletteWidth = this.useAlpha ? w-60 : w-30;
 		var twoaxis = this.elem.querySelector('.twoaxis');
 		var oneaxis = this.elem.querySelector('.oneaxis')
+		var alpha = this.elem.querySelector('.alpha')
 		twoaxis.style.width = paletteWidth + 'px';
 		twoaxis.style.height = h + 'px';
 		oneaxis.style.height = h + 'px';
+		alpha.style.height = h + 'px';
 
 		this.elem.style.display = 'none';
 
+		if(!this.useAlpha){
+			alpha.style.display = 'none';
+			this.elem.querySelector('.rgbInput .a').style.display = 'none';
+			twoaxis.style.left = '0px';
+		}
 
 		/********************************
 		* Initialize the webgl canvas
@@ -173,11 +180,25 @@
 		gl.uniform1f(gl.getUniformLocation(program, 'swatchWidth'), 20);
 		gl.uniform1f(gl.getUniformLocation(program, 'marginWidth'), 10);
 		gl.uniform2f(gl.getUniformLocation(program, 'windowDimensions'), w,h);
+		gl.uniform1i(gl.getUniformLocation(program, 'useAlpha'), !!this.useAlpha);
+
+		var self = this;
+
+		// bind transparency texture
+		var gltex = gl.createTexture();
+		var img = new Image();
+		img.onload = function()
+		{
+			gl.bindTexture(gl.TEXTURE_2D, gltex);
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+			self.redraw();
+		};
+		img.src = transparencyBgUrl;
 
 		gl.clearColor(0.0, 0.0, 0.0, 0.0);
 		this.color(opts.initialColor || 'aaaaaa');
-
-		var self = this;
 
 		twoaxis.ondragstart = function(evt){
 			evt.dataTransfer.setDragImage(document.createElement('div'),0,0);
@@ -203,6 +224,15 @@
 		oneaxis.ondrag = oneaxis.onmousedown = function(evt){
 			if( evt.screenX !== 0 || evt.screenY !== 0 )
 				self.color({v: Math.max(0, Math.min(1, (h-evt.offsetY-1)/(h-1)))});
+		}
+
+		alpha.ondragstart = function(evt){
+			evt.dataTransfer.setDragImage(document.createElement('div'),0,0);
+		}
+
+		alpha.ondrag = alpha.onmousedown = function(evt){
+			if( evt.screenX !== 0 || evt.screenY !== 0 )
+				self.color({a: Math.max(0, Math.min(1, (h-evt.offsetY-1)/(h-1)))});
 		}
 
 		var initialValue, initialMouse;
@@ -285,7 +315,7 @@
 	Palette.prototype.redraw = function()
 	{
 		this._gl.uniform1i(this._gl.getUniformLocation(this._program, 'radial'), !!this.radial);
-		this._gl.uniform3f(this._selectionUniform, this.selection.h, this.selection.s, this.selection.v);
+		this._gl.uniform4f(this._selectionUniform, this.selection.h, this.selection.s, this.selection.v, this.selection.a);
 
 		this._gl.clear(this._gl.COLOR_BUFFER_BIT);
 		this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4);

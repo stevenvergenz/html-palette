@@ -12,11 +12,14 @@
 				}]);
 
 		</script>
+		<style>
+			.htmlPalette { width: 230px; }
+		</style>
 	</head>
 	<body>
 		<div id='angularPicker' ng-app='testbed' ng-controller='TestbedController'>
 			<p>This picker is implemented with an Angular.js directive:</p>
-			<html-palette radial='fields.radial' hex-color='fields.color'></html-palette>
+			<html-palette radial='fields.radial' hex-color='fields.color' use-alpha='true'></html-palette>
 		</div>
 
 		<div>
@@ -27,6 +30,7 @@
 					radial: true,
 					popupEdge: 'e',
 					initialColor: {h: 0.3, s: 0.8, v: 0.8},
+					useAlpha: true,
 					colorCallback: function(color){
 						document.getElementById('classicPicker').style['background-color'] = '#'+color.hex;
 					}

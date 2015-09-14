@@ -54,14 +54,14 @@
 	    return { h: h, s: s, v: v };
 	}
 
-	var template = '<div class="palette">\n	<canvas width="1" height="1"></canvas>\n	<div class="twoaxis" draggable="true"></div>\n	<div class="oneaxis" draggable="true"></div>\n</div>\n<div class="controls">\n	<div class="rgbInput">\n		#\n		<span class="r" draggable="true"></span>\n		<span class="g" draggable="true"></span>\n		<span class="b" draggable="true"></span>\n		<span class="a" draggable="true"></span>\n	</div>\n	<div class="colorswatch"></div>\n</div>\n';
+	var template = '<div class="palette">\n	<canvas width="1" height="1"></canvas>\n	<div class="alpha" draggable="true"></div>\n	<div class="twoaxis" draggable="true"></div>\n	<div class="oneaxis" draggable="true"></div>\n</div>\n<div class="controls">\n	<div class="rgbInput">\n		#\n		<span class="r" draggable="true"></span>\n		<span class="g" draggable="true"></span>\n		<span class="b" draggable="true"></span>\n		<span class="a" draggable="true"></span>\n	</div>\n	<div class="colorswatch"></div>\n</div>\n';
 	var vertShaderSrc = 'precision lowp float;\nattribute vec3 vertPosition;\nvarying vec2 windowPosition;\nuniform vec2 windowDimensions;\n\nvoid main(void)\n{\n	mat3 xform = mat3(0.5*windowDimensions.x, 0.0, 0.0, 0.0, 0.5*windowDimensions.y, 0.0, windowDimensions.x/2.0, windowDimensions.y/2.0, 1.0);\n	windowPosition = (xform * vec3(vertPosition.xy, 1.0)).xy;\n	gl_Position = vec4(vertPosition,1);\n}\n\n';
-	var fragShaderSrc = 'precision lowp float;\n#define M_PI 3.141592653589\n\nvarying vec2 windowPosition;\nuniform vec3 selectedColor;\nuniform float swatchWidth;\nuniform float marginWidth;\nuniform vec2 windowDimensions;\nuniform bool radial;\n\nvec3 hsv2rgb(float h, float s, float v){\n	vec3 c = vec3(h,s,v);\n	vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\n	vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);\n	return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);\n}\n\nvec4 getSelectionColor(vec4 baseColor){\n	return vec4( vec3(1.0)-baseColor.rgb, baseColor.a );\n}\n\nvoid main(void){\n\n	float taWidth = windowDimensions.x - swatchWidth - marginWidth;\n	float aspect = taWidth / windowDimensions.y;\n	vec2 center = vec2(taWidth/2.0, windowDimensions.y/2.0);\n	vec4 color;\n	vec2 selectionPosition;\n\n	if( windowPosition.x <= taWidth )\n	{\n		if(radial){\n\n			vec2 radialVec = (windowPosition - center)*vec2(2.0/taWidth, 2.0/windowDimensions.y);\n			radialVec = mat2(max(1.0,aspect), 0.0, 0.0, max(1.0,1.0/aspect)) * radialVec;\n			if(length(radialVec) > 1.0) discard;\n			float hue = atan(radialVec.y,radialVec.x)/(2.0*M_PI) + 0.5;\n			color = vec4(hue, length(radialVec), selectedColor.z, 1.0);\n\n			float angle = (selectedColor.x-0.5)*2.0*M_PI;\n			selectionPosition = min(center.x, center.y) * selectedColor.y * vec2(cos(angle), sin(angle)) + center;\n\n		} else {\n			color = vec4(windowPosition.x/taWidth, windowPosition.y/windowDimensions.y, selectedColor.z, 1.0);\n			selectionPosition = vec2(selectedColor.x*taWidth, selectedColor.y*windowDimensions.y);\n		}\n\n		vec2 difference = selectionPosition - windowPosition;\n		float radius = length(difference);\n\n		if( radius > 4.5 && radius < 6.0 )\n			gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.x, color.y, color.z), 1.0 ));\n		else\n			gl_FragColor = vec4( hsv2rgb(color.x, color.y, color.z), 1.0);\n	}\n	else if(windowPosition.x > windowDimensions.x-swatchWidth)\n	{\n		vec4 color = vec4( selectedColor.x, selectedColor.y, windowPosition.y/windowDimensions.y, 1.0);\n\n		if( windowDimensions.y * abs(windowPosition.y/windowDimensions.y-selectedColor.z) < 1.0 )\n			gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.x, color.y, color.z), 1.0 ));\n\n		else\n			gl_FragColor = vec4( hsv2rgb(color.x, color.y, color.z), 1.0);\n	}\n	else\n		discard;\n}\n\n';
+	var fragShaderSrc = 'precision lowp float;\n#define M_PI 3.141592653589\n\nvarying vec2 windowPosition;\nuniform vec4 selectedColor;\nuniform float swatchWidth;\nuniform float marginWidth;\nuniform vec2 windowDimensions;\nuniform bool radial;\nuniform bool useAlpha;\nuniform sampler2D tex;\n\nvec3 hsv2rgb(float h, float s, float v){\n	vec3 c = vec3(h,s,v);\n	vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\n	vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);\n	return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);\n}\n\nvec3 hsv2rgb(vec3 c){\n	vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\n	vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);\n	return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);\n}\n\nvec4 getSelectionColor(vec4 baseColor){\n	return vec4( vec3(1.0)-baseColor.rgb, baseColor.a );\n}\n\nvoid main(void){\n\n	float taLeft = useAlpha ? swatchWidth + marginWidth : 0.0;\n	float taWidth = windowDimensions.x - swatchWidth - marginWidth - taLeft;\n	vec2 center = vec2(taWidth/2.0+taLeft, windowDimensions.y/2.0);\n	float aspect = taWidth / windowDimensions.y;\n	vec4 color;\n	vec2 selectionPosition;\n\n	if( windowPosition.x >= taLeft &&  windowPosition.x <= taLeft+taWidth )\n	{\n		if(radial)\n		{\n			vec2 radialVec = (windowPosition - center)*vec2(2.0/taWidth, 2.0/windowDimensions.y);\n			radialVec = mat2(max(1.0,aspect), 0.0, 0.0, max(1.0,1.0/aspect)) * radialVec;\n			if(length(radialVec) > 1.0) discard;\n			float hue = atan(radialVec.y,radialVec.x)/(2.0*M_PI) + 0.5;\n			color = vec4(hue, length(radialVec), selectedColor.z, 1.0);\n\n			float angle = (selectedColor.x-0.5)*2.0*M_PI;\n			selectionPosition = min(center.x-taLeft, center.y) * selectedColor.y * vec2(cos(angle), sin(angle)) + center;\n		}\n		else {\n			color = vec4((windowPosition.x-taLeft)/taWidth, windowPosition.y/windowDimensions.y, selectedColor.z, 1.0);\n			selectionPosition = vec2(selectedColor.x*taWidth+taLeft, selectedColor.y*windowDimensions.y);\n		}\n\n		vec2 difference = selectionPosition - windowPosition;\n		float radius = length(difference);\n\n		if( radius > 4.5 && radius < 6.0 )\n			gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.xyz), 1.0 ));\n		else\n			gl_FragColor = vec4( hsv2rgb(color.xyz), 1.0);\n	}\n\n	else if(useAlpha && windowPosition.x < swatchWidth)\n	{\n		vec4 color = vec4(mix( texture2D(tex, windowPosition/16.0).xyz, hsv2rgb(selectedColor.xyz), windowPosition.y/windowDimensions.y), 1.0);\n\n		if( windowDimensions.y * abs(windowPosition.y/windowDimensions.y-selectedColor.w) < 1.0 )\n			gl_FragColor = getSelectionColor(color);\n		else\n			gl_FragColor = color;\n	}\n\n	else if(windowPosition.x > windowDimensions.x-swatchWidth)\n	{\n		vec4 color = vec4( selectedColor.x, selectedColor.y, windowPosition.y/windowDimensions.y, 1.0);\n\n		if( windowDimensions.y * abs(windowPosition.y/windowDimensions.y-selectedColor.z) < 1.0 )\n			gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.xyz), 1.0 ));\n		else\n			gl_FragColor = vec4( hsv2rgb(color.xyz), 1.0);\n	}\n	else\n		discard;\n}\n\n';
 	var transparencyBgUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAK0lEQVQoz2Pcu3cvAzbg5OSEVZyJgUQwqoEYwPj//3+sEvv27RsNJfppAAD+GAhT8tRPqwAAAABJRU5ErkJggg==';
 
 	var styleTag = document.createElement('style');
 	styleTag.type = 'text/css';
-	styleTag.innerHTML = 'html-palette,.html-palette{display:inline-block;width:30px;height:30px;border:ridge lightgrey 3px}.htmlPalette{width:200px;height:200px;border:solid grey 1px;padding:5px;background-color:white;display:-webkit-box;display:-moz-flex;display:-ms-flexbox;display:-webkit-flex;display:flex;-webkit-box-orient:vertical;-moz-flex-direction:column;-ms-flex-direction:column;-webkit-flex-direction:column;flex-direction:column;position:absolute;box-sizing:border-box}.htmlPalette .palette{position:relative;padding:1px;-moz-flex-grow:1;-ms-flex:1 1;-webkit-flex-grow:1;flex-grow:1}.htmlPalette .palette .twoaxis,.htmlPalette .palette .oneaxis{position:absolute;border:solid grey 1px}.htmlPalette .palette .twoaxis{top:0px;left:0px;cursor:crosshair}.htmlPalette .palette .oneaxis{top:0px;right:0px;width:20px;margin-left:10px;cursor:ns-resize}.htmlPalette .controls{height:30px;-moz-flex-shrink:0;-ms-flex-shrink:0;-webkit-flex-shrink:0;flex-shrink:0;display:-webkit-box;display:-moz-flex;display:-ms-flexbox;display:-webkit-flex;display:flex;-webkit-box-orient:horizontal;-moz-flex-direction:row;-ms-flex-direction:row;-webkit-flex-direction:row;flex-direction:row;-webkit-box-align:stretch;-moz-align-items:stretch;-ms-flex-align:stretch;-webkit-align-items:stretch;align-items:stretch;-webkit-box-pack:justify;-moz-justify-content:space-between;-ms-flex-pack:justify;-webkit-justify-content:space-between;justify-content:space-between}.htmlPalette .controls .rgbInput{display:-webkit-box;display:-moz-flex;display:-ms-flexbox;display:-webkit-flex;display:flex;-webkit-box-align:center;-moz-align-items:center;-ms-flex-align:center;-webkit-align-items:center;align-items:center;padding-left:5px;font-size:20px;letter-spacing:1px}.htmlPalette .controls .rgbInput span{margin:0 2px;cursor:ns-resize}.htmlPalette .controls .rgbInput .r{color:red}.htmlPalette .controls .rgbInput .g{color:green}.htmlPalette .controls .rgbInput .b{color:blue}.htmlPalette .controls .rgbInput .a{color:black}.htmlPalette .controls .colorswatch{width:25%;box-sizing:border-box;border:solid grey 1px}\n';
+	styleTag.innerHTML = 'html-palette,.html-palette{display:inline-block;width:30px;height:30px;border:ridge lightgrey 3px}.htmlPalette{width:200px;height:200px;border:solid grey 1px;padding:5px;background-color:white;display:-webkit-box;display:-moz-flex;display:-ms-flexbox;display:-webkit-flex;display:flex;-webkit-box-orient:vertical;-moz-flex-direction:column;-ms-flex-direction:column;-webkit-flex-direction:column;flex-direction:column;position:absolute;box-sizing:border-box}.htmlPalette .palette{position:relative;padding:1px;-moz-flex-grow:1;-ms-flex:1 1;-webkit-flex-grow:1;flex-grow:1}.htmlPalette .palette .twoaxis,.htmlPalette .palette .oneaxis,.htmlPalette .palette .alpha{position:absolute;border:solid grey 1px}.htmlPalette .palette .twoaxis{top:0px;left:30px;cursor:crosshair}.htmlPalette .palette .oneaxis{top:0px;right:0px;width:20px;margin-left:10px;cursor:ns-resize}.htmlPalette .palette .alpha{top:0px;left:0px;width:20px;margin-right:10px;cursor:ns-resize}.htmlPalette .controls{height:30px;-moz-flex-shrink:0;-ms-flex-shrink:0;-webkit-flex-shrink:0;flex-shrink:0;display:-webkit-box;display:-moz-flex;display:-ms-flexbox;display:-webkit-flex;display:flex;-webkit-box-orient:horizontal;-moz-flex-direction:row;-ms-flex-direction:row;-webkit-flex-direction:row;flex-direction:row;-webkit-box-align:stretch;-moz-align-items:stretch;-ms-flex-align:stretch;-webkit-align-items:stretch;align-items:stretch;-webkit-box-pack:justify;-moz-justify-content:space-between;-ms-flex-pack:justify;-webkit-justify-content:space-between;justify-content:space-between}.htmlPalette .controls .rgbInput{display:-webkit-box;display:-moz-flex;display:-ms-flexbox;display:-webkit-flex;display:flex;-webkit-box-align:center;-moz-align-items:center;-ms-flex-align:center;-webkit-align-items:center;align-items:center;padding-left:5px;font-size:20px;letter-spacing:1px}.htmlPalette .controls .rgbInput span{margin:0 2px;cursor:ns-resize}.htmlPalette .controls .rgbInput .r{color:red}.htmlPalette .controls .rgbInput .g{color:green}.htmlPalette .controls .rgbInput .b{color:blue}.htmlPalette .controls .rgbInput .a{color:black}.htmlPalette .controls .colorswatch{width:25%;box-sizing:border-box;border:solid grey 1px}\n';
 	document.head.appendChild(styleTag);
 
 	document.addEventListener('click', function(evt)
@@ -110,15 +110,22 @@
 		gl.viewport(0, 0, w, h);
 
 		// size the overlay
-		var paletteWidth = w-30;
+		var paletteWidth = this.useAlpha ? w-60 : w-30;
 		var twoaxis = this.elem.querySelector('.twoaxis');
 		var oneaxis = this.elem.querySelector('.oneaxis')
+		var alpha = this.elem.querySelector('.alpha')
 		twoaxis.style.width = paletteWidth + 'px';
 		twoaxis.style.height = h + 'px';
 		oneaxis.style.height = h + 'px';
+		alpha.style.height = h + 'px';
 
 		this.elem.style.display = 'none';
 
+		if(!this.useAlpha){
+			alpha.style.display = 'none';
+			this.elem.querySelector('.rgbInput .a').style.display = 'none';
+			twoaxis.style.left = '0px';
+		}
 
 		/********************************
 		* Initialize the webgl canvas
@@ -173,11 +180,25 @@
 		gl.uniform1f(gl.getUniformLocation(program, 'swatchWidth'), 20);
 		gl.uniform1f(gl.getUniformLocation(program, 'marginWidth'), 10);
 		gl.uniform2f(gl.getUniformLocation(program, 'windowDimensions'), w,h);
+		gl.uniform1i(gl.getUniformLocation(program, 'useAlpha'), !!this.useAlpha);
+
+		var self = this;
+
+		// bind transparency texture
+		var gltex = gl.createTexture();
+		var img = new Image();
+		img.onload = function()
+		{
+			gl.bindTexture(gl.TEXTURE_2D, gltex);
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+			self.redraw();
+		};
+		img.src = transparencyBgUrl;
 
 		gl.clearColor(0.0, 0.0, 0.0, 0.0);
 		this.color(opts.initialColor || 'aaaaaa');
-
-		var self = this;
 
 		twoaxis.ondragstart = function(evt){
 			evt.dataTransfer.setDragImage(document.createElement('div'),0,0);
@@ -203,6 +224,15 @@
 		oneaxis.ondrag = oneaxis.onmousedown = function(evt){
 			if( evt.screenX !== 0 || evt.screenY !== 0 )
 				self.color({v: Math.max(0, Math.min(1, (h-evt.offsetY-1)/(h-1)))});
+		}
+
+		alpha.ondragstart = function(evt){
+			evt.dataTransfer.setDragImage(document.createElement('div'),0,0);
+		}
+
+		alpha.ondrag = alpha.onmousedown = function(evt){
+			if( evt.screenX !== 0 || evt.screenY !== 0 )
+				self.color({a: Math.max(0, Math.min(1, (h-evt.offsetY-1)/(h-1)))});
 		}
 
 		var initialValue, initialMouse;
@@ -285,7 +315,7 @@
 	Palette.prototype.redraw = function()
 	{
 		this._gl.uniform1i(this._gl.getUniformLocation(this._program, 'radial'), !!this.radial);
-		this._gl.uniform3f(this._selectionUniform, this.selection.h, this.selection.s, this.selection.v);
+		this._gl.uniform4f(this._selectionUniform, this.selection.h, this.selection.s, this.selection.v, this.selection.a);
 
 		this._gl.clear(this._gl.COLOR_BUFFER_BIT);
 		this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4);
