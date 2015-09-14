@@ -470,6 +470,13 @@
 							return palette.radial;
 						break;
 
+					case 'updateTriggerBg':
+						if(args.length)
+							palette.updateTriggerBg = args[0];
+						else
+							return palette.updateTriggerBg;
+						break;
+
 					case 'redraw':
 						palette.redraw();
 						break;
@@ -523,9 +530,6 @@
 								$scope.hsvColor.v = color.v;
 								$scope.hsvColor.a = color.a;
 
-								if(!attrs.suppressBgColor)
-									elem[0].style['background-color'] = '#'+color.hex;
-
 								$timeout(function(){
 									$scope.$apply();
 									wToD = false;
@@ -555,9 +559,6 @@
 								$scope.rgbColor.b = color.b;
 								$scope.rgbColor.a = color.a;
 
-								if(!attrs.suppressBgColor)
-									elem[0].style['background-color'] = '#'+color.hex;
-
 								$timeout(function(){
 									$scope.$apply();
 									wToD = false;
@@ -582,9 +583,6 @@
 							if(!dToW){
 								wToD = true;
 								$scope.hexColor = color.hex;
-
-								if(!attrs.suppressBgColor)
-									elem[0].style['background-color'] = '#'+color.hex;
 
 								$timeout(function(){
 									$scope.$apply();
