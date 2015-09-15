@@ -1,6 +1,6 @@
 {
   "name": "html-palette",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Color picker widget",
   "main": "palette.js",
   "scripts": {

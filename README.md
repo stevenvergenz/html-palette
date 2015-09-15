@@ -141,6 +141,14 @@ If `false`, the color picker is drawn as a rectangle, with hue varying on the x 
 
 When enabled, the picker trigger element's `background-color` style will be changed to the current selection color, with a checker pattern to indicate transparency if applicable.
 
+### css (constructor option only)
+
+*Type*: `String`
+
+*Default*: `undefined`
+
+When supplied, this class is applied to the picker popup.
+
 ### initialColor (constructor option only)
 
 *Type*: `String`|`Object`

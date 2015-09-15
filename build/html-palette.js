@@ -78,7 +78,7 @@
 
 		// add new color picker to the dom
 		this.elem = document.createElement('div');
-		this.elem.setAttribute('class', 'htmlPalette');
+		this.elem.setAttribute('class', 'htmlPalette'+(opts.css?' '+opts.css:''));
 		this.elem.innerHTML = template;
 		this.elem.onclick = function(e){ e.stopPropagation(); }
 		document.body.appendChild(this.elem);
