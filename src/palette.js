@@ -520,6 +520,7 @@
 				{
 					var palette = new Palette(elem[0], attrs);
 					var dToW = false, wToD = false;
+					var applyHandle = null, applyDelay = parseInt(attrs.throttleApply) || 0;
 
 					$scope.$watch('radial', function(newval){
 						palette.radial = !!newval;
@@ -540,15 +541,21 @@
 							if(!dToW)
 							{
 								wToD = true;
-								$scope.hsvColor.h = color.h;
-								$scope.hsvColor.s = color.s;
-								$scope.hsvColor.v = color.v;
-								$scope.hsvColor.a = color.a;
 
-								$timeout(function(){
+								if(applyHandle)
+									$timeout.cancel(applyHandle);
+
+								applyHandle = $timeout(function()
+								{
+									$scope.hsvColor.h = color.h;
+									$scope.hsvColor.s = color.s;
+									$scope.hsvColor.v = color.v;
+									$scope.hsvColor.a = color.a;
+
 									$scope.$apply();
+									applyHandle = null;
 									wToD = false;
-								});
+								}, applyDelay);
 							}
 						};
 
@@ -569,15 +576,21 @@
 							if(!dToW)
 							{
 								wToD = true;
-								$scope.rgbColor.r = color.r;
-								$scope.rgbColor.g = color.g;
-								$scope.rgbColor.b = color.b;
-								$scope.rgbColor.a = color.a;
 
-								$timeout(function(){
+								if(applyHandle)
+									$timeout.cancel(applyHandle);
+
+								applyHandle = $timeout(function()
+								{
+									$scope.rgbColor.r = color.r;
+									$scope.rgbColor.g = color.g;
+									$scope.rgbColor.b = color.b;
+									$scope.rgbColor.a = color.a;
+
 									$scope.$apply();
+									applyHandle = null;
 									wToD = false;
-								});
+								}, applyDelay);
 							}
 						};
 
@@ -597,12 +610,17 @@
 						palette.colorCallback = function(color){
 							if(!dToW){
 								wToD = true;
-								$scope.hexColor = color.hex;
 
-								$timeout(function(){
+								if(applyHandle)
+									$timeout.cancel(applyHandle);
+
+								applyHandle = $timeout(function()
+								{
+									$scope.hexColor = color.hex;
 									$scope.$apply();
+									applyHandle = null;
 									wToD = false;
-								});
+								}, applyDelay);
 							}
 						};
 
