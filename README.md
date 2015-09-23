@@ -165,6 +165,14 @@ The initial color selection of the picker. The color callback will be called onc
 
 If specified, the widget controls will include a slider for the alpha channel.
 
+### throttleApply (Angular.js attribute only)
+
+*Type*: `Integer`
+
+*Default*: `0`
+
+Will not apply the widget's color to the bound model unless the color is unchanged for *throttleApply* milliseconds.
+
 ## Other Instance Properties
 
 * `elem` - The color picker element
