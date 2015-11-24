@@ -31,7 +31,7 @@ module.exports = function(grunt)
 					}
 				},
 				files: {
-					'build/html-palette.js': ['src/palette.js']
+					'build/html-palette.js': ['src/palette-new.js']
 				}
 			}
 		},
