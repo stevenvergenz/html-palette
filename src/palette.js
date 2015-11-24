@@ -57,7 +57,7 @@
 	var template = '<%= widgetTemplate %>';
 	var vertShaderSrc = '<%= vertShader %>';
 	var fragShaderSrc = '<%= fragShader %>';
-	var transparencyBgUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAK0lEQVQoz2Pcu3cvAzbg5OSEVZyJgUQwqoEYwPj//3+sEvv27RsNJfppAAD+GAhT8tRPqwAAAABJRU5ErkJggg==';
+	var transparencyBgUrl = '<%= checkerImg %>';
 
 	var styleTag = document.createElement('style');
 	styleTag.type = 'text/css';

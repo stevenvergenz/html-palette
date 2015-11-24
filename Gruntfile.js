@@ -25,7 +25,8 @@ module.exports = function(grunt)
 							widgetTemplate: fs.readFileSync(libpath.join(__dirname, 'src/widget.html'), {encoding:'utf8'}).replace(/\n/g,'\\n'),
 							vertShader: fs.readFileSync(libpath.join(__dirname, 'src/vertShader.glsl'), {encoding:'utf8'}).replace(/\n/g,'\\n'),
 							fragShader: fs.readFileSync(libpath.join(__dirname, 'src/fragShader.glsl'), {encoding:'utf8'}).replace(/\n/g,'\\n'),
-							styles: fs.readFileSync(libpath.join(__dirname, 'build/palette.css'), {encoding:'utf8'}).replace(/\n/g,'\\n')
+							styles: fs.readFileSync(libpath.join(__dirname, 'build/palette.css'), {encoding:'utf8'}).replace(/\n/g,'\\n'),
+							checkerImg: 'data:image/png;base64,'+fs.readFileSync(libpath.join(__dirname, 'src/checker.png')).toString('base64')
 						};
 					}
 				},
