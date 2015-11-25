@@ -59,7 +59,7 @@
 	var fragShaderSrc = 'precision lowp float;\n#define M_PI 3.141592653589\n\nvarying vec2 windowPosition;\nuniform vec4 selectedColor;\nuniform float swatchWidth;\nuniform float marginWidth;\nuniform vec2 windowDimensions;\nuniform bool radial;\nuniform bool useAlpha;\nuniform sampler2D tex;\n\nvec3 hsv2rgb(vec3 c){\n	vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\n	vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);\n	return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);\n}\n\nvec4 getSelectionColor(vec4 baseColor){\n	return vec4( vec3(1.0)-baseColor.rgb, baseColor.a );\n}\n\nvoid main(void){\n\n	float taLeft = useAlpha ? swatchWidth + marginWidth : 0.0;\n	float taWidth = windowDimensions.x - swatchWidth - marginWidth - taLeft;\n	vec2 center = vec2(taWidth/2.0+taLeft, windowDimensions.y/2.0);\n	float aspect = taWidth / windowDimensions.y;\n	vec4 color;\n	vec2 selectionPosition;\n\n	if( windowPosition.x >= taLeft &&  windowPosition.x <= taLeft+taWidth )\n	{\n		if(radial)\n		{\n			vec2 radialVec = (windowPosition - center)*vec2(2.0/taWidth, 2.0/windowDimensions.y);\n			radialVec = mat2(max(1.0,aspect), 0.0, 0.0, max(1.0,1.0/aspect)) * radialVec;\n			if(length(radialVec) > 1.0) discard;\n			float hue = atan(radialVec.y,radialVec.x)/(2.0*M_PI) + 0.5;\n			color = vec4(hue, length(radialVec), selectedColor.z, 1.0);\n\n			float angle = (selectedColor.x-0.5)*2.0*M_PI;\n			selectionPosition = min(center.x-taLeft, center.y) * selectedColor.y * vec2(cos(angle), sin(angle)) + center;\n		}\n		else {\n			color = vec4((windowPosition.x-taLeft)/taWidth, windowPosition.y/windowDimensions.y, selectedColor.z, 1.0);\n			selectionPosition = vec2(selectedColor.x*taWidth+taLeft, selectedColor.y*windowDimensions.y);\n		}\n\n		vec2 difference = selectionPosition - windowPosition;\n		float radius = length(difference);\n\n		if( radius > 4.5 && radius < 6.0 )\n			gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.xyz), 1.0 ));\n		else\n			gl_FragColor = vec4( hsv2rgb(color.xyz), 1.0);\n	}\n\n	else if(useAlpha && windowPosition.x < swatchWidth)\n	{\n		vec4 color = vec4(mix( texture2D(tex, windowPosition/16.0).xyz, hsv2rgb(selectedColor.xyz), windowPosition.y/windowDimensions.y), 1.0);\n\n		if( windowDimensions.y * abs(windowPosition.y/windowDimensions.y-selectedColor.w) < 1.0 )\n			gl_FragColor = getSelectionColor(color);\n		else\n			gl_FragColor = color;\n	}\n\n	else if(windowPosition.x > windowDimensions.x-swatchWidth)\n	{\n		vec4 color = vec4( selectedColor.x, selectedColor.y, windowPosition.y/windowDimensions.y, 1.0);\n\n		if( windowDimensions.y * abs(windowPosition.y/windowDimensions.y-selectedColor.z) < 1.0 )\n			gl_FragColor = getSelectionColor(vec4(hsv2rgb(color.xyz), 1.0 ));\n		else\n			gl_FragColor = vec4( hsv2rgb(color.xyz), 1.0);\n	}\n	else\n		discard;\n}\n\n';
 	var transparencyBgUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAK0lEQVQoz2Pcu3cvAzbg5OSEVZyJgUQwqoEYwPj//3+sEvv27RsNJfppAAD+GAhT8tRPqwAAAABJRU5ErkJggg==';
 
-
+	var paletteInitialized = false;
 	var PalettePopup = {
 
 		"colorCallback": null,
@@ -68,6 +68,9 @@
 
 		"initialize": function()
 		{
+			if(document.getElementById('htmlPalettePopup'))
+				return;
+
 			// insert template into dom
 			this.elem = document.createElement('div');
 			this.elem.id = 'htmlPalettePopup';
@@ -77,7 +80,7 @@
 			document.body.appendChild(this.elem);
 
 			document.addEventListener('click', function(evt){
-				this.elem.style.display = 'none';
+				document.getElementById('htmlPalettePopup').style.display = 'none';
 			});
 
 			this.canvas = this.elem.children[0].children[0];
@@ -244,6 +247,49 @@
 			this.gl.uniform1i(this.gl.getUniformLocation(this._program, 'radial'), !!radial);
 		},
 
+		"placePopup": function(evt, popupEdge)
+		{
+			evt.stopPropagation();
+
+			var popupStyle = window.getComputedStyle(this.elem);
+			var popupWidth = parseInt(popupStyle.width) || 0;
+			var popupHeight = parseInt(popupStyle.height) || 0;
+
+			var box = evt.target.getBoundingClientRect();
+			var origin = {
+				x: (box.left+box.right)/2,
+				y: (box.top+box.bottom)/2
+			};
+
+			var offset = 20;
+
+			// fall back on sw on missing or invalid option
+			if( !/^[ns]?[we]?$/.test(popupEdge) || !popupEdge )
+				popupEdge = 'se';
+
+			// set position vertically
+			if(/^n/.test(popupEdge))
+				this.elem.style.top = origin.y - popupHeight - offset + 'px';
+
+			else if(/^s/.test(popupEdge))
+				this.elem.style.top = origin.y + offset + 'px';
+
+			else
+				this.elem.style.top = origin.y - popupHeight/2 + 'px';
+
+			// set position horizontally
+			if(/e$/.test(popupEdge))
+				this.elem.style.left = origin.x + offset + 'px';
+
+			else if(/w$/.test(popupEdge))
+				this.elem.style.left = origin.x - popupWidth - offset + 'px';
+
+			else
+				this.elem.style.left = origin.x - popupWidth/2 + 'px';
+
+			this.elem.style.display = '';
+		},
+
 		// manually position the various ui elements
 		"sizePopup": function(useAlpha, classes)
 		{
@@ -366,31 +412,308 @@
 			this.lastOpts = opts;
 			opts = opts || {};
 
-			this.elem.style.display = '';
+			this.placePopup(evt, opts.popupEdge);
 			this.sizePopup(opts.useAlpha, opts.css);
 			this.rebind(opts.useAlpha, opts.radial);
-			this.color(opts.color || 'aa0000');
+			this.color(opts.color);
 		},
 
 		"hide": function(){
 			this.elem.style.display = 'none';
+			this.colorCallback = null;
 		}
 
 	};
 
-	function Trigger(opts)
+	function Trigger(triggerElem, opts)
 	{
+		this.triggerElem = triggerElem;
+
+		this.colorCallback = opts.colorCallback || null;
+		this.popupEdge = opts.popupEdge || 'se';
+		this.radial = opts.radial || false;
+		this.useAlpha = opts.useAlpha || false;
+		this.updateTriggerBg = opts.updateTriggerBg !== undefined ? opts.updateTriggerBg : true;
+		this.disabled = opts.disabled || false;
+		this.selection = opts.initialColor || 'aaaaaa';
+
+		PalettePopup.initialize();
+
+		var self = this;
+		triggerElem.addEventListener('click', this._clickHandler = function(event)
+		{
+			if(!opts.disabled)
+			{
+				PalettePopup.triggerElem = self.triggerElem;
+				PalettePopup.colorCallback = function(color)
+				{
+					self.selection = color;
+
+					if(self.updateTriggerBg){
+						var rgba = [Math.round(color.r*255), Math.round(color.g*255), Math.round(color.b*255), color.a];
+						rgba = 'rgba('+rgba.join(',')+')';
+						self.triggerElem.style['background'] = 'linear-gradient('+rgba+','+rgba+'), url('+transparencyBgUrl+')';
+					}
+					if(self.colorCallback){
+						self.colorCallback(color);
+					}
+				};
+
+				PalettePopup.show({
+					radial: self.radial,
+					useAlpha: self.useAlpha,
+					popupEdge: self.popupEdge,
+					css: self.css,
+					color: self.selection
+				}, event);
+			}
+		});
 	}
 
-	Trigger.prototype.onColorSet = function()
+	Trigger.prototype.color = function(val)
 	{
-		if(this.updateTriggerBg){
-			this.triggerElem.style['background'] = 'linear-gradient('+rgba+','+rgba+'), url('+transparencyBgUrl+')';
+		if(!val)
+			return this.color;
+		else if(PalettePopup.triggerElem === this.triggerElem){
+			PalettePopup.color(val);
+		}
+		else {
+			this.color = val;
+			this.colorCallback(val);
 		}
 	}
 
-	window.HtmlPalette = {};
-	window.HtmlPalette._popup = PalettePopup;
+	Trigger.prototype.destroy = function()
+	{
+		this.triggerElem.removeEventListener('click', this._clickHandler);
+		if(PalettePopup.triggerElem === this.triggerElem){
+			PalettePopup.hide();
+		}
+	}
+
+	window.HtmlPalette = Trigger;
+	window.HtmlPalette.PalettePopup = PalettePopup;
+
+	if(jQuery)
+	{
+		jQuery.fn.extend({
+			'HtmlPalette': function(cmd)
+			{
+				var args = Array.prototype.slice.call(arguments, 1);
+				var palette = this.data('HtmlPalette');
+
+				// when in doubt, return the palette object
+				if(!cmd)
+					return palette;
+
+				// initialize
+				else if(cmd instanceof Object)
+				{
+					if(palette)
+						palette.destroy();
+
+					palette = this.data('HtmlPalette', new HtmlPalette(this[0], cmd));
+					if(palette.colorCallback)
+						palette.colorCallback = palette.colorCallback.bind(this);
+				}
+
+				// error on command without initialization
+				else if(!palette) {
+					throw new Error('HtmlPalette is uninitialized on this element');
+				}
+
+				// evaluate command
+				else switch(cmd)
+				{
+					case 'color':
+						if(args.length)
+							palette.color(args[0]);
+						else
+							return palette.color();
+						break;
+
+					case 'colorCallback':
+						if(args.length)
+							palette.colorCallback = args[0].bind(this);
+						else
+							return palette.colorCallback;
+						break;
+
+					case 'popupEdge':
+						if(args.length)
+							palette.popupEdge = args[0];
+						else
+							return palette.popupEdge;
+						break;
+
+					case 'radial':
+						if(args.length){
+							palette.radial = args[0];
+						}
+						else
+							return palette.radial;
+						break;
+
+					case 'updateTriggerBg':
+						if(args.length)
+							palette.updateTriggerBg = args[0];
+						else
+							return palette.updateTriggerBg;
+						break;
+
+					case 'disabled':
+						if(args.length)
+							palette.disabled = args[0];
+						else
+							return palette.disabled;
+						break;
+
+					case 'destroy':
+						palette.destroy();
+						this.data('htmlPalette', null);
+						break;
+				}
+			}
+		});
+	}
+
+
+	if(angular)
+	{
+		var app = angular.module('html-palette', []);
+
+		app.directive('htmlPalette', ['$timeout', function($timeout)
+		{
+			return {
+				restrict: 'AE',
+				scope: {
+					hsvColor: '=',
+					rgbColor: '=',
+					hexColor: '=',
+					radial: '=',
+					disabled: '='
+				},
+				link: function($scope, elem, attrs)
+				{
+					var palette = new HtmlPalette(elem[0], attrs);
+					var dToW = false, wToD = false;
+					var applyHandle = null, applyDelay = parseInt(attrs.throttleApply) || 0;
+
+					$scope.$watch('radial', function(newval){
+						palette.radial = !!newval;
+					});
+
+					$scope.$watch('disabled', function(newval){
+						palette.disabled = !!newval;
+					});
+
+					elem.bind('$destroy', function(){
+						palette.destroy();
+					});
+
+					if(attrs.hsvColor)
+					{
+						palette.colorCallback = function(color){
+							if(!dToW)
+							{
+								wToD = true;
+
+								if(applyHandle)
+									$timeout.cancel(applyHandle);
+
+								applyHandle = $timeout(function()
+								{
+									$scope.hsvColor.h = color.h;
+									$scope.hsvColor.s = color.s;
+									$scope.hsvColor.v = color.v;
+									$scope.hsvColor.a = color.a;
+
+									$scope.$apply();
+									applyHandle = null;
+									wToD = false;
+								}, applyDelay);
+							}
+						};
+
+						$scope.$watchCollection('hsvColor', function(newval){
+							if(newval && !wToD){
+								dToW = true;
+								palette.color(newval);
+								dToW = false;
+							}
+						});
+						
+						palette.color($scope.hsvColor);
+					}
+
+					else if(attrs.rgbColor)
+					{
+						palette.colorCallback = function(color){
+							if(!dToW)
+							{
+								wToD = true;
+
+								if(applyHandle)
+									$timeout.cancel(applyHandle);
+
+								applyHandle = $timeout(function()
+								{
+									$scope.rgbColor.r = color.r;
+									$scope.rgbColor.g = color.g;
+									$scope.rgbColor.b = color.b;
+									$scope.rgbColor.a = color.a;
+
+									$scope.$apply();
+									applyHandle = null;
+									wToD = false;
+								}, applyDelay);
+							}
+						};
+
+						$scope.$watchCollection('rgbColor', function(newval){
+							if(newval && !wToD){
+								dToW = true;
+								palette.color(newval);
+								dToW = false;
+							}
+						});
+
+						palette.color($scope.rgbColor);
+					}
+
+					else if(attrs.hexColor)
+					{
+						palette.colorCallback = function(color){
+							if(!dToW){
+								wToD = true;
+
+								if(applyHandle)
+									$timeout.cancel(applyHandle);
+
+								applyHandle = $timeout(function()
+								{
+									$scope.hexColor = color.hex;
+									$scope.$apply();
+									applyHandle = null;
+									wToD = false;
+								}, applyDelay);
+							}
+						};
+
+						$scope.$watch('hexColor', function(newval){
+							if(newval && !wToD){
+								dToW = true;
+								palette.color(newval);
+								dToW = false;
+							}
+						});
+
+						palette.color($scope.hexColor);
+					}
+				}
+			};
+		}]);
+	}
 
 })(window.jQuery, window.angular);
 

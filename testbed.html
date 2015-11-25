@@ -3,7 +3,8 @@
 	<head>
 		<script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.min.js'></script>
 		<script src='https://code.jquery.com/jquery-2.1.4.js'></script>
-		<script src='build/html-palette.min.js'></script>
+		<script src='build/html-palette.js'></script>
+		<link rel='stylesheet' href='build/palette.css'/>
 		<script>
 			angular.module('testbed', ['html-palette'])
 				.controller('TestbedController', ['$scope', function($scope){
@@ -13,13 +14,15 @@
 
 		</script>
 		<style>
-			.htmlPalette { width: 230px; }
+			.small { width: 200px; }
+			.med { width: 230px; }
+			.large { width: 260px; }
 		</style>
 	</head>
 	<body>
 		<div id='angularPicker' ng-app='testbed' ng-controller='TestbedController'>
 			<p>This picker is implemented with an Angular.js directive:</p>
-			<html-palette radial='fields.radial' hex-color='fields.color' use-alpha='true'></html-palette>
+			<html-palette radial='fields.radial' hex-color='fields.color' use-alpha='true' css='large'></html-palette>
 		</div>
 
 		<div>
@@ -31,7 +34,8 @@
 					popupEdge: 'e',
 					initialColor: {h: 0.3, s: 0.8, v: 0.8},
 					useAlpha: true,
-					updateTriggerBg: true
+					updateTriggerBg: true,
+					css: 'med'
 				});
 			</script>
 		</div>
@@ -43,7 +47,8 @@
 				$('#jqPicker').HtmlPalette({
 					popupEdge: 'ne',
 					initialColor: {r: 0.7, g: 0.7, b: 1.0},
-					updateTriggerBg: true
+					updateTriggerBg: true,
+					css: 'small'
 				});
 			</script>
 		</div>

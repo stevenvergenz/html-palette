@@ -8,10 +8,7 @@
 	<body>
 		<h1>Test Test</h1>
 		<script>
-			HtmlPalette._popup.initialize();
-			setTimeout(function(){
-				HtmlPalette._popup.show({useAlpha: true});
-			}, 200);
+			var x = new HtmlPalette(document.body.children[0], {useAlpha: true});
 		</script>
 	</body>
 </html>
