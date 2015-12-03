@@ -54,6 +54,70 @@
 	    return { h: h, s: s, v: v };
 	}
 
+	function expandColor(val, partial)
+	{
+		if(!val) val = {};
+
+		if(val.a === undefined) val.a = 1.0;
+		if(partial && partial.a !== undefined) val.a = partial.a;
+
+		if(partial.h!==undefined || partial.s!==undefined || partial.v!==undefined)
+		{
+			if(partial.h !== undefined) val.h = partial.h;
+			if(partial.s !== undefined) val.s = partial.s;
+			if(partial.v !== undefined) val.v = partial.v;
+
+			var rgb = hsvToRgb(val.h, val.s, val.v);
+			val.r = Math.max(rgb.r, 0);
+			val.g = Math.max(rgb.g, 0);
+			val.b = Math.max(rgb.b, 0);
+
+			val.hex =
+				('00'+Math.round(val.r*255).toString(16)).slice(-2)
+				+('00'+Math.round(val.g*255).toString(16)).slice(-2)
+				+('00'+Math.round(val.b*255).toString(16)).slice(-2)
+		}
+		else if(partial.r!==undefined || partial.g!==undefined || partial.b!==undefined)
+		{
+			if(partial.r !== undefined) val.r = partial.r;
+			if(partial.g !== undefined) val.g = partial.g;
+			if(partial.b !== undefined) val.b = partial.b;
+
+			var hsv = rgbToHsv(val.r, val.g, val.b);
+
+			val.h = hsv.h;
+			val.s = hsv.s;
+			val.v = hsv.v;
+
+			val.hex =
+				('00'+Math.round(val.r*255).toString(16)).slice(-2)
+				+('00'+Math.round(val.g*255).toString(16)).slice(-2)
+				+('00'+Math.round(val.b*255).toString(16)).slice(-2)
+		}
+		else if( /^[0-9A-Fa-f]{6}$/.test(partial) )
+		{
+			val.hex = partial;
+
+			partial = parseInt(partial, 16);
+			val.r = ((partial & 0xff0000) >> 16) / 255;
+			val.g = ((partial & 0x00ff00) >> 8) / 255;
+			val.b = (partial & 0x0000ff) / 255;
+
+			var hsv = rgbToHsv(val.r, val.g, val.b);
+			val.h = hsv.h;
+			val.s = hsv.s;
+			val.v = hsv.v;
+
+		}
+
+		var rgba = [Math.round(val.r*255), Math.round(val.g*255), Math.round(val.b*255), val.a];
+		rgba = 'rgba('+rgba.join(',')+')';
+		val.css = 'linear-gradient('+rgba+','+rgba+'), url('+transparencyBgUrl+')';
+
+		return val;
+	}
+	
+
 	var template = '<%= widgetTemplate %>';
 	var vertShaderSrc = '<%= vertShader %>';
 	var fragShaderSrc = '<%= fragShader %>';
@@ -64,7 +128,6 @@
 
 		"colorCallback": null,
 		"elem": document.createElement('div'),
-		"selection": {},
 
 		"initialize": function()
 		{
@@ -293,7 +356,7 @@
 		// manually position the various ui elements
 		"sizePopup": function(useAlpha, classes)
 		{
-			this.elem.setAttribute('class', classes);
+			this.elem.setAttribute('class', classes || '');
 
 			var popupStyle = window.getComputedStyle(this.elem);
 			this._popupWidth = parseInt(popupStyle.width) || 0;
@@ -321,80 +384,22 @@
 				this.elem.querySelector('.rgbInput .a').style.display = 'none';
 				twoaxis.style.left = '0px';
 			}
+			else {
+				alpha.style.display = '';
+				this.elem.querySelector('.rgbInput .a').style.display = '';
+				twoaxis.style.left = '';
+			}
 
 		},
 		"color": function(val)
 		{
-			if(this.selection.a === undefined) this.selection.a = 1.0;
-			if(val && val.a !== undefined) this.selection.a = val.a;
-
-			if(!val){
-				return this.selection;
-			}
-			else if(val.h!==undefined || val.s!==undefined || val.v!==undefined)
-			{
-				if(val.h !== undefined) this.selection.h = val.h;
-				if(val.s !== undefined) this.selection.s = val.s;
-				if(val.v !== undefined) this.selection.v = val.v;
-
-				var rgb = hsvToRgb(this.selection.h, this.selection.s, this.selection.v);
-				this.selection.r = Math.max(rgb.r, 0);
-				this.selection.g = Math.max(rgb.g, 0);
-				this.selection.b = Math.max(rgb.b, 0);
-
-				this.selection.hex =
-					('00'+Math.round(this.selection.r*255).toString(16)).slice(-2)
-					+('00'+Math.round(this.selection.g*255).toString(16)).slice(-2)
-					+('00'+Math.round(this.selection.b*255).toString(16)).slice(-2)
-			}
-			else if(val.r!==undefined || val.g!==undefined || val.b!==undefined)
-			{
-				if(val.r !== undefined) this.selection.r = val.r;
-				if(val.g !== undefined) this.selection.g = val.g;
-				if(val.b !== undefined) this.selection.b = val.b;
-
-				var hsv = rgbToHsv(this.selection.r, this.selection.g, this.selection.b);
-
-				this.selection.h = hsv.h;
-				this.selection.s = hsv.s;
-				this.selection.v = hsv.v;
-
-				this.selection.hex =
-					('00'+Math.round(this.selection.r*255).toString(16)).slice(-2)
-					+('00'+Math.round(this.selection.g*255).toString(16)).slice(-2)
-					+('00'+Math.round(this.selection.b*255).toString(16)).slice(-2)
-			}
-			else if( /^[0-9A-Fa-f]{6}$/.test(val) )
-			{
-				this.selection.hex = val;
-
-				val = parseInt(val, 16);
-				this.selection.r = ((val & 0xff0000) >> 16) / 255;
-				this.selection.g = ((val & 0x00ff00) >> 8) / 255;
-				this.selection.b = (val & 0x0000ff) / 255;
-
-				var hsv = rgbToHsv(this.selection.r, this.selection.g, this.selection.b);
-				this.selection.h = hsv.h;
-				this.selection.s = hsv.s;
-				this.selection.v = hsv.v;
-
-			}
+			this.selection = expandColor( this.selection, val );
 
 			if(val)
 			{
 				this.redraw();
-
-				this.elem.querySelector('.rgbInput .r').innerHTML = this.selection.hex.slice(0,2);
-				this.elem.querySelector('.rgbInput .g').innerHTML = this.selection.hex.slice(2,4);
-				this.elem.querySelector('.rgbInput .b').innerHTML = this.selection.hex.slice(4,6);
-				this.elem.querySelector('.rgbInput .a').innerHTML = ('00'+Math.round(this.selection.a*255).toString(16)).slice(-2);
-
-				var rgba = [Math.round(this.selection.r*255), Math.round(this.selection.g*255), Math.round(this.selection.b*255), this.selection.a];
-				rgba = 'rgba('+rgba.join(',')+')';
-				this.elem.querySelector('.colorswatch').style['background'] =
-					'linear-gradient('+rgba+','+rgba+'), url('+transparencyBgUrl+')';
-
-				if(this.colorCallback) this.colorCallback(this.selection);
+				if(this.colorCallback)
+					this.colorCallback(this.selection);
 			}
 		},
 
@@ -405,6 +410,12 @@
 
 			this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 			this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);		
+
+			this.elem.querySelector('.rgbInput .r').innerHTML = this.selection.hex.slice(0,2);
+			this.elem.querySelector('.rgbInput .g').innerHTML = this.selection.hex.slice(2,4);
+			this.elem.querySelector('.rgbInput .b').innerHTML = this.selection.hex.slice(4,6);
+			this.elem.querySelector('.rgbInput .a').innerHTML = ('00'+Math.round(this.selection.a*255).toString(16)).slice(-2);
+			this.elem.querySelector('.colorswatch').style['background'] = this.selection.css;
 		},
 
 		"show": function(opts, evt)
@@ -415,7 +426,8 @@
 			this.placePopup(evt, opts.popupEdge);
 			this.sizePopup(opts.useAlpha, opts.css);
 			this.rebind(opts.useAlpha, opts.radial);
-			this.color(opts.color);
+			this.selection = opts.color;
+			this.redraw();
 		},
 
 		"hide": function(){
@@ -435,29 +447,20 @@
 		this.useAlpha = opts.useAlpha || false;
 		this.updateTriggerBg = opts.updateTriggerBg !== undefined ? opts.updateTriggerBg : true;
 		this.disabled = opts.disabled || false;
-		this.selection = opts.initialColor || 'aaaaaa';
+
+		this.selection = opts.initialColor;
+		this.color(opts.initialColor);
 
 		PalettePopup.initialize();
 
 		var self = this;
+
 		triggerElem.addEventListener('click', this._clickHandler = function(event)
 		{
 			if(!opts.disabled)
 			{
 				PalettePopup.triggerElem = self.triggerElem;
-				PalettePopup.colorCallback = function(color)
-				{
-					self.selection = color;
-
-					if(self.updateTriggerBg){
-						var rgba = [Math.round(color.r*255), Math.round(color.g*255), Math.round(color.b*255), color.a];
-						rgba = 'rgba('+rgba.join(',')+')';
-						self.triggerElem.style['background'] = 'linear-gradient('+rgba+','+rgba+'), url('+transparencyBgUrl+')';
-					}
-					if(self.colorCallback){
-						self.colorCallback(color);
-					}
-				};
+				PalettePopup.colorCallback = self.color.bind(self);
 
 				PalettePopup.show({
 					radial: self.radial,
@@ -472,14 +475,19 @@
 
 	Trigger.prototype.color = function(val)
 	{
-		if(!val)
-			return this.color;
-		else if(PalettePopup.triggerElem === this.triggerElem){
-			PalettePopup.color(val);
-		}
-		else {
-			this.color = val;
-			this.colorCallback(val);
+		if(val === undefined)
+			return this.selection;
+		else
+		{
+			this.selection = expandColor(this.selection, val);
+
+			if(this.updateTriggerBg){
+				this.triggerElem.style['background'] = this.selection.css;
+			}
+
+			if(this.colorCallback){
+				this.colorCallback(this.selection);
+			}
 		}
 	}
 
@@ -595,7 +603,7 @@
 				},
 				link: function($scope, elem, attrs)
 				{
-					var palette = new HtmlPalette(elem[0], attrs);
+					var palette = new Trigger(elem[0], attrs);
 					var dToW = false, wToD = false;
 					var applyHandle = null, applyDelay = parseInt(attrs.throttleApply) || 0;
 
