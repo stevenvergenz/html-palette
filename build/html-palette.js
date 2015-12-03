@@ -131,6 +131,8 @@
 
 		"initialize": function()
 		{
+			var self = this;
+
 			if(document.getElementById('htmlPalettePopup'))
 				return;
 
@@ -143,7 +145,7 @@
 			document.body.appendChild(this.elem);
 
 			document.addEventListener('click', function(evt){
-				document.getElementById('htmlPalettePopup').style.display = 'none';
+				self.hide();
 			});
 
 			this.canvas = this.elem.children[0].children[0];
@@ -226,8 +228,7 @@
 			* Bind event listeners
 			******************************************/
 
-			var self = this,
-				twoaxis = this.elem.querySelector('.twoaxis'),
+			var twoaxis = this.elem.querySelector('.twoaxis'),
 				oneaxis = this.elem.querySelector('.oneaxis'),
 				alpha = this.elem.querySelector('.alpha');
 
@@ -433,6 +434,7 @@
 		"hide": function(){
 			this.elem.style.display = 'none';
 			this.colorCallback = null;
+			this.triggerElem = null;
 		}
 
 	};
@@ -457,7 +459,7 @@
 
 		triggerElem.addEventListener('click', this._clickHandler = function(event)
 		{
-			if(!opts.disabled)
+			if(PalettePopup.triggerElem !== self.triggerElem && !opts.disabled)
 			{
 				PalettePopup.triggerElem = self.triggerElem;
 				PalettePopup.colorCallback = self.color.bind(self);
