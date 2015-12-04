@@ -111,8 +111,8 @@
 		}
 
 		var rgba = [Math.round(val.r*255), Math.round(val.g*255), Math.round(val.b*255), val.a];
-		rgba = 'rgba('+rgba.join(',')+')';
-		val.css = 'linear-gradient('+rgba+','+rgba+'), url('+transparencyBgUrl+')';
+		val.css = 'rgba('+rgba.join(',')+')';
+		val.background = 'linear-gradient('+val.css+','+val.css+'), url('+transparencyBgUrl+')';
 
 		return val;
 	}
@@ -421,7 +421,7 @@
 			this.elem.querySelector('.rgbInput .g').innerHTML = this.selection.hex.slice(2,4);
 			this.elem.querySelector('.rgbInput .b').innerHTML = this.selection.hex.slice(4,6);
 			this.elem.querySelector('.rgbInput .a').innerHTML = ('00'+Math.round(this.selection.a*255).toString(16)).slice(-2);
-			this.elem.querySelector('.colorswatch').style['background'] = this.selection.css;
+			this.elem.querySelector('.colorswatch').style['background'] = this.selection.background;
 		},
 
 		"show": function(opts, evt)
@@ -466,7 +466,7 @@
 
 		triggerElem.addEventListener('click', this._clickHandler = function(event)
 		{
-			if(PalettePopup.triggerElem !== self.triggerElem && !opts.disabled)
+			if(PalettePopup.triggerElem !== self.triggerElem && !self.disabled)
 			{
 				PalettePopup.triggerElem = self.triggerElem;
 				PalettePopup.colorCallback = self.color.bind(self);
@@ -491,7 +491,7 @@
 			this.selection = expandColor(this.selection, val);
 
 			if(this.updateTriggerBg){
-				this.triggerElem.style['background'] = this.selection.css;
+				this.triggerElem.style['background'] = this.selection.background;
 			}
 
 			if(this.colorCallback){

@@ -51,13 +51,14 @@ angular.module('myApp', ['html-palette'])
 
 ## Usage
 
-Include the script on your page, and you're ready to go.
+Include the script and stylesheet on your page, and you're ready to go.
 
 ```html
+<link rel='stylesheet' href='palette.css'/>
 <script type='text/javascript' src='html-palette.min.js'></script>
 ```
 
-The constructor for HtmlPalette has three forms, depending on what library you want to use for your workflow. They all take two things though: a trigger element and an options object. When the trigger element's `click` event is fired, the color picker will appear next to it. The available options are detailed in the Options section below.
+The constructor for HtmlPalette has three versions, depending on what library you want to use for your workflow. They all take two things though: a trigger element and an options object. When the trigger element's `click` event is fired, the color picker will appear next to it. The available options are detailed in the Options section below.
 
 * **Vanilla Javascript**:
 
@@ -65,6 +66,7 @@ The constructor for HtmlPalette has three forms, depending on what library you w
 
 	```javascript
 	var palette = new HtmlPalette(trigger, options);
+	palette.option = true;
 	palette.destroy();
 	```
 
@@ -74,16 +76,27 @@ The constructor for HtmlPalette has three forms, depending on what library you w
 
 	```javascript
 	$(trigger).HtmlPalette(options);
-	$(trigger).HtmlPalette('radial', true);
+	$(trigger).HtmlPalette('option', true);
 	$(trigger).HtmlPalette('destroy');
 	```
 
 * **Angular.js**:
 
-	The picker takes the form of a directive, so you can add it straight into your HTML, no Javascript required. The scope variable referred to by one of the attributes `hsv-color`, `rgb-color`, or `hex-color` (use only one) is bi-directionally bound to the picker's selected color, in the format specified by the attribute. Additional attributes are mapped to options in the usual Angular fashion: hyphenated to camel-case.
+	The picker takes the form of a directive, so you can add it straight into your HTML, no Javascript required. The scope variable referred to by one of the attributes `hsv-color`, `rgb-color`, or `hex-color` (use only one) is bi-directionally bound to the picker's selected color, in the format specified by the attribute. Note that an alpha value is only supplied to the RGB and HSV versions, not hex. Additional picker attributes are mapped to options in the usual Angular fashion: hyphenated to camel-case.
+
+	```javascript
+	angular.module('my-app', ['html-palette'])
+	.controller('MyController', function($scope){
+		$scope.$watch('myColor', function(newval){
+			console.log('You have selected the color', newval);
+		});
+	});
+	```
 
 	```html
-	<html-palette hex-color='myColor' popup-edge='nw'></html-palette>
+	<div ng-controller='MyController'>
+		<html-palette hex-color='myColor' popup-edge='nw'></html-palette>
+	</div>
 	```
 
 ## Color Representations
@@ -99,7 +112,7 @@ Alpha value is initialized to 1.0 unless specified. Any of these representations
 
 ## Options/Properties
 
-All options are also available for read/write on the resulting HtmlPalette instance, with exceptions noted.
+All options are also available for read/write on the resulting HtmlPalette instance, with exceptions noted. Options indicated as "offscreen only" will be applied the next time the popup is raised.
 
 ### colorCallback
 
@@ -107,7 +120,12 @@ All options are also available for read/write on the resulting HtmlPalette insta
 
 *Default*: `null`
 
-A function called when the selected color changes, either from picker events or a call to the `color` setter function.
+A function called when the selected color changes, either from picker events or a call to the `color` setter function. The callback is passed an object containing all three representations of the active color (keys `r,g,b`, `h,s,v`, `a`, and `hex`). All three versions represent the same color.
+
+In addition to the raw color values listed above, the callback argument provides two other properties:
+
+* `css` - A string representing the given color using the CSS `rgba` function. E.g. `"rgba(200, 100, 50, 1.0)"`. This is provided because the `hex` format doesn't include the alpha channel.
+* `background` - A CSS string representing the given color composed over a grey and white checked background for alpha visualization. Useful for color preview purposes.
 
 ### disabled
 
@@ -125,7 +143,7 @@ When disabled the trigger will not bring up the color picker when clicked.
 
 Determines where the picker will appear relative to the trigger element. Can be one of the eight cardinal directions: `'n'`, `'nw'`, `'w'`, `'sw'`, `'s'`, `'se'`, `'e'`, or `'ne'`.
 
-### radial
+### radial (offscreen only)
 
 *Type*: `boolean`
 
@@ -139,9 +157,9 @@ If `false`, the color picker is drawn as a rectangle, with hue varying on the x 
 
 *Default*: `false`
 
-When enabled, the picker trigger element's `background-color` style will be changed to the current selection color, with a checker pattern to indicate transparency if applicable.
+When enabled, the picker trigger element's `background` style will be changed to the current selection color, with a checker pattern to indicate transparency if applicable.
 
-### css (constructor option only)
+### css (offscreen only)
 
 *Type*: `String`
 
@@ -155,9 +173,9 @@ When supplied, this class is applied to the picker popup.
 
 *Default*: `'aaaaaa'`
 
-The initial color selection of the picker. The color callback will be called once on initalization with this color, if a callback is provided.
+The initial color selection of the picker. The color callback will be called once on initalization with this color, if a callback is provided on initialization.
 
-### useAlpha (constructor option, read-only)
+### useAlpha (offscreen only)
 
 *Type*: `boolean`
 
@@ -175,7 +193,6 @@ Will not apply the widget's color to the bound model unless the color is unchang
 
 ## Other Instance Properties
 
-* `elem` - The color picker element
 * `triggerElem` - The element whose `click` event brings up the picker.
 * `selection` - The internal color selection. Do not modify this directly, use the `color` method instead.
 
@@ -183,13 +200,9 @@ Will not apply the widget's color to the bound model unless the color is unchang
 
 ### color([newcolor])
 
-The getter/setter function for the picker's currently selected color. If called with no arguments, i.e. `color()`, the method returns an object with properties `r, g, b`, `h, s, v`, and `hex`, corresponding to the three color representations noted above. If called with one argument, i.e. `color(newcolor)`, the selection color is set to the specified color (in any of the three representations), and the color callback is called.
+The getter/setter function for the picker's currently selected color. If called with no arguments, i.e. `color()`, the method returns an object with properties `r, g, b`, `h, s, v`, and `hex`, corresponding to the three color representations noted above. If called with one argument, i.e. `color(newcolor)`, the selection color is set to the specified color (in any of the three representations), and the color callback is called if supplied.
 
-
-### redraw()
-
-Redraws the palette canvas. Only necessary after changing the `radial` property in the vanilla version.
 
 ### destroy()
 
-Remove the color picker from the DOM, and unregister the click listener on the trigger element.
+Unregister the click listener on the trigger element.
