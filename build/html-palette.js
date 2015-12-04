@@ -154,6 +154,11 @@
 			this.gl = this.canvas.getContext('webgl');
 			var gl = this.gl;
 
+			if(!gl){
+				console.error('Your web browser does not support WebGL, so cannot make use of the HtmlPalette color picker. Sorry :(');
+				return;
+			}
+
 
 			/********************************
 			* Initialize the webgl canvas
@@ -421,14 +426,16 @@
 
 		"show": function(opts, evt)
 		{
-			this.lastOpts = opts;
-			opts = opts || {};
+			if(this.gl){
+				this.lastOpts = opts;
+				opts = opts || {};
 
-			this.placePopup(evt, opts.popupEdge);
-			this.sizePopup(opts.useAlpha, opts.css);
-			this.rebind(opts.useAlpha, opts.radial);
-			this.selection = opts.color;
-			this.redraw();
+				this.placePopup(evt, opts.popupEdge);
+				this.sizePopup(opts.useAlpha, opts.css);
+				this.rebind(opts.useAlpha, opts.radial);
+				this.selection = opts.color;
+				this.redraw();
+			}
 		},
 
 		"hide": function(){
