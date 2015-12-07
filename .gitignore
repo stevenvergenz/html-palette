@@ -1,5 +1,3 @@
 *.swp
 node_modules
 .sass-cache
-build/palette.css
-build/palette.css.map
