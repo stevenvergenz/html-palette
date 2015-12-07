@@ -470,13 +470,14 @@
 		this.colorCallback = opts.colorCallback || null;
 		this.colorSelectCallback = opts.colorSelectCallback || null;
 		this.popupEdge = opts.popupEdge || 'se';
+		this.css = opts.css || '';
 		this.radial = opts.radial || false;
 		this.useAlpha = opts.useAlpha || false;
 		this.updateTriggerBg = opts.updateTriggerBg !== undefined ? opts.updateTriggerBg : true;
 		this.disabled = opts.disabled || false;
 
-		this.selection = opts.initialColor;
-		this.color(opts.initialColor);
+		this.selection = {};
+		this.color(opts.initialColor || 'aaaaaa');
 
 		PalettePopup.initialize();
 
@@ -630,21 +631,22 @@
 			return {
 				restrict: 'AE',
 				scope: {
-					hsvColor: '=',
-					rgbColor: '=',
-					hexColor: '=',
-					radial: '=',
-					disabled: '=',
+					color: '=',
+					radial: '=?',
+					alpha: '=?',
+					disabled: '=?',
 					onColorSelect: '&?'
 				},
 				link: function($scope, elem, attrs)
 				{
 					var palette = new Trigger(elem[0], attrs);
-					var dToW = false, wToD = false;
-					var applyHandle = null, applyDelay = parseInt(attrs.throttleApply) || 0;
 
 					$scope.$watch('radial', function(newval){
 						palette.radial = !!newval;
+					});
+
+					$scope.$watch('alpha', function(newval){
+						palette.alpha = !!newval;
 					});
 
 					$scope.$watch('disabled', function(newval){
@@ -656,149 +658,19 @@
 					});
 
 					palette.colorSelectCallback = function(color){
-						$scope.onColorSelect({color: color});
+						$scope.onColorSelect && $scope.onColorSelect({color: color});
 					};
 
-					/*function dragEnd(evt){
-						if($scope.sliding){
-							$scope.sliding = false;
-							$scope.$apply();
-						}
+					palette.colorCallback = function(color){
+						$scope.color = color;
 					};
 
-					function dragStart(evt){
-						if(!$scope.sliding){
-							$scope.sliding = true;
-							$scope.$apply();
+					$scope.$watchCollection('color', function(newval){
+						if(newval){
+							palette.color(newval);
 						}
+					});
 
-						if(evt.type == "mousedown"){
-							saveMouse[evt.target.className](evt);
-						}
-						else if(evt.type == "dragstart"){
-							saveDrag[evt.target.className](evt);
-						}
-					}
-
-					var twoaxis = palette.elem.querySelector('.twoaxis');
-					var oneaxis = palette.elem.querySelector('.oneaxis');
-					var alpha = palette.elem.querySelector('.alpha');
-
-					var saveDrag = {
-						'twoaxis': twoaxis.ondragstart,
-						'oneaxis': oneaxis.ondragstart,
-						'alpha': alpha.ondragstart
-					},
-					saveMouse = {
-						'twoaxis': twoaxis.onmousedown,
-						'oneaxis': oneaxis.onmousedown,
-						'alpha': alpha.onmousedown
-					};
-
-					twoaxis.onmouseup = oneaxis.onmouseup = alpha.onmouseup = dragEnd;
-					twoaxis.ondragend = oneaxis.ondragend = alpha.ondragend = dragEnd;
-					twoaxis.ondragstart = oneaxis.ondragstart = alpha.ondragstart = dragStart;
-					twoaxis.onmousedown = oneaxis.onmousedown = alpha.onmousedown = dragStart;
-*/
-					if(attrs.hsvColor)
-					{
-						palette.colorCallback = function(color){
-							if(!dToW)
-							{
-								wToD = true;
-
-								if(applyHandle)
-									$timeout.cancel(applyHandle);
-
-								applyHandle = $timeout(function()
-								{
-									$scope.hsvColor.h = color.h;
-									$scope.hsvColor.s = color.s;
-									$scope.hsvColor.v = color.v;
-									$scope.hsvColor.a = color.a;
-
-									$scope.$apply();
-									applyHandle = null;
-									wToD = false;
-								}, applyDelay);
-							}
-						};
-
-						$scope.$watchCollection('hsvColor', function(newval){
-							if(newval && !wToD){
-								dToW = true;
-								palette.color(newval);
-								dToW = false;
-							}
-						});
-						
-						palette.color($scope.hsvColor);
-					}
-
-					else if(attrs.rgbColor)
-					{
-						palette.colorCallback = function(color){
-							if(!dToW)
-							{
-								wToD = true;
-
-								if(applyHandle)
-									$timeout.cancel(applyHandle);
-
-								applyHandle = $timeout(function()
-								{
-									$scope.rgbColor.r = color.r;
-									$scope.rgbColor.g = color.g;
-									$scope.rgbColor.b = color.b;
-									$scope.rgbColor.a = color.a;
-
-									$scope.$apply();
-									applyHandle = null;
-									wToD = false;
-								}, applyDelay);
-							}
-						};
-
-						$scope.$watchCollection('rgbColor', function(newval){
-							if(newval && !wToD){
-								dToW = true;
-								palette.color(newval);
-								dToW = false;
-							}
-						});
-
-						palette.color($scope.rgbColor);
-					}
-
-					else if(attrs.hexColor)
-					{
-						palette.colorCallback = function(color){
-							if(!dToW){
-								wToD = true;
-
-								if(applyHandle)
-									$timeout.cancel(applyHandle);
-
-								applyHandle = $timeout(function()
-								{
-									$scope.hexColor = color.hex;
-									$scope.$apply();
-									applyHandle = null;
-									wToD = false;
-								}, applyDelay);
-							}
-						};
-
-						$scope.$watch('hexColor', function(newval){
-							if(newval && !wToD){
-								dToW = true;
-								palette.color(newval);
-								dToW = false;
-							}
-						});
-
-						palette.color($scope.hexColor);
-					}
 				}
 			};
 		}]);

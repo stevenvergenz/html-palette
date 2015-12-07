@@ -4,7 +4,7 @@
 		<title>HtmlPalette Live Demo</title>
 		<script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.min.js'></script>
 		<link rel='stylesheet' href='build/palette.css'/>
-		<script src='build/html-palette.min.js'></script>
+		<script src='build/html-palette.js'></script>
 		<script>
 
 			angular.module('testbed', ['html-palette'])
@@ -14,28 +14,18 @@
 					$scope.topLeftColor = {r:Math.random(), g:Math.random(), b:Math.random()};
 					$scope.bottomRightColor = {r:Math.random(), g:Math.random(), b:Math.random(), a:Math.random()/2+0.5};
 
-					$scope.getColor = function(color){
-						return 'rgba('+Math.round(color.r*255)+', '+Math.round(color.g*255)+', '+Math.round(color.b*255)+', '+color.a+')';
-					}
-
 					$scope.invertColor = function(color){
 						return 'rgb('+Math.round((1-color.r)*255)+', '+Math.round((1-color.g)*255)+', '+Math.round((1-color.b)*255)+')';
 					}
-
-					$scope.$watchCollection('topLeftColor', updateGradient);
-					$scope.$watchCollection('bottomRightColor', updateGradient);
 
 					$scope.log = function(color){
 						console.log(color);
 					}
 
-					function updateGradient()
+					$scope.updateGradient = function(color1, color2)
 					{
-						var nearCorner = $scope.getColor($scope.topLeftColor);
-						var farCorner = $scope.getColor($scope.bottomRightColor);
 						var angle = Math.atan2(window.innerHeight, window.innerWidth);
-
-						document.body.style['background-image'] = 'linear-gradient(to right bottom, '+nearCorner+', '+farCorner+'), url("src/checker.png")';
+						document.body.style['background-image'] = 'linear-gradient(to right bottom, '+color1.css+', '+color2.css+'), url("src/checker.png")';
 					}
 				});
 
@@ -70,11 +60,12 @@
 
 		<h1><a href='https://github.com/stevenvergenz/html-palette'>HtmlPalette - An HTML5 Color Picker</a></h1>
 
-		<html-palette rgb-color='topLeftColor' radial='true' style='top: 0px; left: 0px;'
-			ng-style='{"background-color": getColor(topLeftColor), color: invertColor(topLeftColor)}'>Click me!</html-palette>
-		<html-palette rgb-color='bottomRightColor' popup-edge='nw' use-alpha='true' style='bottom: 0px; right: 0px;'
-			ng-style='{"background-color": getColor(bottomRightColor), color: invertColor(bottomRightColor)}'
-			on-color-select='log(color)'>Click me!</html-palette>
+		<html-palette on-color-select='updateGradient(topLeftColor, bottomRightColor)' radial='true' style='top: 0px; left: 0px;'
+			ng-style='{"background-color": topLeftColor.css, color: invertColor(topLeftColor)}'
+			color='topLeftColor'>Click me!</html-palette>
+		<html-palette on-color-select='updateGradient(topLeftColor, bottomRightColor)' popup-edge='nw' use-alpha='true' style='bottom: 0px; right: 0px;'
+			ng-style='{"background-color": bottomRightColor.css, color: invertColor(bottomRightColor)}'
+			color='bottomRightColor'>Click me!</html-palette>
 
 	</body>
 </html>

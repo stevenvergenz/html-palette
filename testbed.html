@@ -9,20 +9,20 @@
 			angular.module('testbed', ['html-palette'])
 				.controller('TestbedController', ['$scope', function($scope){
 					window.scope = $scope;
-					$scope.fields = {color: 'deadbf', radial: false};
+					$scope.fields = {color: {r:0.8705, g:0.6784, b: 0.7451, a: 0.9372}, radial: false};
 				}]);
 
 		</script>
 		<style>
-			.small { width: 200px; }
-			.med { width: 230px; }
-			.large { width: 260px; }
+			.small { width: 200px !important; }
+			.med { width: 230px !important; }
+			.large { width: 260px !important; }
 		</style>
 	</head>
 	<body>
 		<div id='angularPicker' ng-app='testbed' ng-controller='TestbedController'>
 			<p>This picker is implemented with an Angular.js directive:</p>
-			<html-palette radial='fields.radial' hex-color='fields.color' use-alpha='true' css='large'></html-palette>
+			<html-palette radial='fields.radial' color='fields.color' use-alpha='true' css='large'></html-palette>
 		</div>
 
 		<div>
