@@ -239,7 +239,10 @@
 				alpha = this.elem.querySelector('.alpha');
 
 			twoaxis.ondragstart = function(evt){
-				evt.dataTransfer.setDragImage(document.createElement('div'),0,0);
+				if(evt.dataTransfer.setDragImage)
+					evt.dataTransfer.setDragImage(document.createElement('div'),0,0);
+				if(evt.dataTransfer.dropEffect)
+					evt.dataTransfer.dropEffect = 'move';
 			}
 
 			twoaxis.ondrag = twoaxis.onmousedown = function(evt){
@@ -609,7 +612,8 @@
 					rgbColor: '=',
 					hexColor: '=',
 					radial: '=',
-					disabled: '='
+					disabled: '=',
+					sliding: '=?'
 				},
 				link: function($scope, elem, attrs)
 				{
@@ -628,6 +632,47 @@
 					elem.bind('$destroy', function(){
 						palette.destroy();
 					});
+
+					function dragEnd(evt){
+						if($scope.sliding){
+							$scope.sliding = false;
+							$scope.$apply();
+						}
+					};
+
+					function dragStart(evt){
+						if(!$scope.sliding){
+							$scope.sliding = true;
+							$scope.$apply();
+						}
+
+						if(evt.type == "mousedown"){
+							saveMouse[evt.target.className](evt);
+						}
+						else if(evt.type == "dragstart"){
+							saveDrag[evt.target.className](evt);
+						}
+					}
+
+					var twoaxis = palette.elem.querySelector('.twoaxis');
+					var oneaxis = palette.elem.querySelector('.oneaxis');
+					var alpha = palette.elem.querySelector('.alpha');
+
+					var saveDrag = {
+						'twoaxis': twoaxis.ondragstart,
+						'oneaxis': oneaxis.ondragstart,
+						'alpha': alpha.ondragstart
+					},
+					saveMouse = {
+						'twoaxis': twoaxis.onmousedown,
+						'oneaxis': oneaxis.onmousedown,
+						'alpha': alpha.onmousedown
+					};
+
+					twoaxis.onmouseup = oneaxis.onmouseup = alpha.onmouseup = dragEnd;
+					twoaxis.ondragend = oneaxis.ondragend = alpha.ondragend = dragEnd;
+					twoaxis.ondragstart = oneaxis.ondragstart = alpha.ondragstart = dragStart;
+					twoaxis.onmousedown = oneaxis.onmousedown = alpha.onmousedown = dragStart;
 
 					if(attrs.hsvColor)
 					{
