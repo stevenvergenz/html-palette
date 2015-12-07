@@ -127,6 +127,7 @@
 	var PalettePopup = {
 
 		"colorCallback": null,
+		"colorSelectCallback": null,
 		"elem": document.createElement('div'),
 
 		"initialize": function()
@@ -280,6 +281,12 @@
 					self.color({a: Math.max(0, Math.min(1, (h-evt.offsetY-1)/(h-1)))});
 			}
 
+			twoaxis.ondragend = twoaxis.onmouseup = oneaxis.ondragend = oneaxis.onmouseup = alpha.ondragend = alpha.onmouseup =
+				function(evt){
+					if(self.colorSelectCallback)
+						self.colorSelectCallback(self.selection);
+				};
+
 			var initialValue, initialMouse;
 
 			function bindRGBElement(e, channel)
@@ -300,6 +307,11 @@
 						self.color(color);
 					}
 				}
+
+				e.ondragend = function(evt){
+					if(self.colorSelectCallback)
+						self.colorSelectCallback(self.selection);
+				};
 			}
 
 			bindRGBElement(this.elem.querySelector('.r'), 'r');
@@ -445,6 +457,7 @@
 		"hide": function(){
 			this.elem.style.display = 'none';
 			this.colorCallback = null;
+			this.colorSelectCallback = null;
 			this.triggerElem = null;
 		}
 
@@ -455,6 +468,7 @@
 		this.triggerElem = triggerElem;
 
 		this.colorCallback = opts.colorCallback || null;
+		this.colorSelectCallback = opts.colorSelectCallback || null;
 		this.popupEdge = opts.popupEdge || 'se';
 		this.radial = opts.radial || false;
 		this.useAlpha = opts.useAlpha || false;
@@ -474,6 +488,7 @@
 			{
 				PalettePopup.triggerElem = self.triggerElem;
 				PalettePopup.colorCallback = self.color.bind(self);
+				PalettePopup.colorSelectCallback = self.colorSelectCallback;
 
 				PalettePopup.show({
 					radial: self.radial,
@@ -560,6 +575,13 @@
 							return palette.colorCallback;
 						break;
 
+					case 'colorSelectCallback':
+						if(args.length)
+							palette.colorSelectCallback = args[0].bind(this);
+						else
+							return palette.colorSelectCallback;
+						break;
+
 					case 'popupEdge':
 						if(args.length)
 							palette.popupEdge = args[0];
@@ -613,7 +635,7 @@
 					hexColor: '=',
 					radial: '=',
 					disabled: '=',
-					sliding: '=?'
+					onColorSelect: '&?'
 				},
 				link: function($scope, elem, attrs)
 				{
@@ -633,7 +655,11 @@
 						palette.destroy();
 					});
 
-					function dragEnd(evt){
+					palette.colorSelectCallback = function(color){
+						$scope.onColorSelect({color: color});
+					};
+
+					/*function dragEnd(evt){
 						if($scope.sliding){
 							$scope.sliding = false;
 							$scope.$apply();
@@ -673,7 +699,7 @@
 					twoaxis.ondragend = oneaxis.ondragend = alpha.ondragend = dragEnd;
 					twoaxis.ondragstart = oneaxis.ondragstart = alpha.ondragstart = dragStart;
 					twoaxis.onmousedown = oneaxis.onmousedown = alpha.onmousedown = dragStart;
-
+*/
 					if(attrs.hsvColor)
 					{
 						palette.colorCallback = function(color){

@@ -25,6 +25,10 @@
 					$scope.$watchCollection('topLeftColor', updateGradient);
 					$scope.$watchCollection('bottomRightColor', updateGradient);
 
+					$scope.log = function(color){
+						console.log(color);
+					}
+
 					function updateGradient()
 					{
 						var nearCorner = $scope.getColor($scope.topLeftColor);
@@ -69,7 +73,8 @@
 		<html-palette rgb-color='topLeftColor' radial='true' style='top: 0px; left: 0px;'
 			ng-style='{"background-color": getColor(topLeftColor), color: invertColor(topLeftColor)}'>Click me!</html-palette>
 		<html-palette rgb-color='bottomRightColor' popup-edge='nw' use-alpha='true' style='bottom: 0px; right: 0px;'
-			ng-style='{"background-color": getColor(bottomRightColor), color: invertColor(bottomRightColor)}'>Click me!</html-palette>
+			ng-style='{"background-color": getColor(bottomRightColor), color: invertColor(bottomRightColor)}'
+			on-color-select='log(color)'>Click me!</html-palette>
 
 	</body>
 </html>
