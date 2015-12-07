@@ -152,6 +152,7 @@
 
 			// get gl context
 			this.gl = this.canvas.getContext('webgl');
+			if(!this.gl) this.gl = this.canvas.getContext('experimental-webgl');
 			var gl = this.gl;
 
 			if(!gl){
