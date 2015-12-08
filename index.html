@@ -11,7 +11,7 @@
 				.controller('TestbedController', function($scope)
 				{
 					window.scope = $scope;
-					$scope.topLeftColor = {r:Math.random(), g:Math.random(), b:Math.random()};
+					$scope.topLeftColor = {r:Math.random(), g:Math.random(), b:Math.random(), a:1.0};
 					$scope.bottomRightColor = {r:Math.random(), g:Math.random(), b:Math.random(), a:Math.random()/2+0.5};
 
 					$scope.invertColor = function(color){
@@ -24,9 +24,19 @@
 
 					$scope.updateGradient = function(color1, color2)
 					{
+						if(!color1.css){
+							var rgba = [Math.round(color1.r*255), Math.round(color1.g*255), Math.round(color1.b*255), color1.a];
+							color1.css = 'rgba('+rgba.join(',')+')';
+						}
+						if(!color2.css){
+							var rgba = [Math.round(color2.r*255), Math.round(color2.g*255), Math.round(color2.b*255), color2.a];
+							color2.css = 'rgba('+rgba.join(',')+')';
+						}
 						var angle = Math.atan2(window.innerHeight, window.innerWidth);
 						document.body.style['background-image'] = 'linear-gradient(to right bottom, '+color1.css+', '+color2.css+'), url("src/checker.png")';
 					}
+
+					$scope.updateGradient($scope.topLeftColor, $scope.bottomRightColor);
 				});
 
 		</script>
@@ -63,9 +73,11 @@
 		<html-palette on-color-select='updateGradient(topLeftColor, bottomRightColor)' radial='true' style='top: 0px; left: 0px;'
 			ng-style='{"background-color": topLeftColor.css, color: invertColor(topLeftColor)}'
 			color='topLeftColor'>Click me!</html-palette>
-		<html-palette on-color-select='updateGradient(topLeftColor, bottomRightColor)' popup-edge='nw' use-alpha='true' style='bottom: 0px; right: 0px;'
+		<!--<html-palette on-color-select='updateGradient(topLeftColor, bottomRightColor)' popup-edge='nw' use-alpha='true' style='bottom: 0px; right: 0px;'
 			ng-style='{"background-color": bottomRightColor.css, color: invertColor(bottomRightColor)}'
-			color='bottomRightColor'>Click me!</html-palette>
+			color='bottomRightColor'>Click me!</html-palette>-->
+
+		<input type='button' ng-click='topLeftColor.r = 1.0; topLeftColor.g = 0.0; topLeftColor.b = 0.0' value='Make red'/>
 
 	</body>
 </html>

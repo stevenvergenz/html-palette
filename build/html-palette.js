@@ -508,14 +508,22 @@
 			return this.selection;
 		else
 		{
-			this.selection = expandColor(this.selection, val);
+			/*var flag = false;
+			for(var i in val){
+				if(this.selection[i] !== val[i])
+					flag = true;
+			}
+			if(!flag) return;*/
+
+			if( this.selection !== val )
+				this.selection = expandColor(this.selection, val);
 
 			if(this.updateTriggerBg){
 				this.triggerElem.style['background'] = this.selection.background;
 			}
 
 			if(this.colorCallback){
-				this.colorCallback(this.selection);
+				this.colorCallback(JSON.parse(JSON.stringify(this.selection)));
 			}
 		}
 	}
@@ -662,11 +670,32 @@
 					};
 
 					palette.colorCallback = function(color){
-						$scope.color = color;
+						for(var i in color)
+							$scope.color[i] = color[i];
+						//$scope.$apply();
 					};
 
-					$scope.$watchCollection('color', function(newval){
-						if(newval){
+					$scope.$watchGroup(['color.h','color.s','color.v'], function(newval, oldval){
+						if(newval[0] !== undefined || newval[1] !== undefined || newval[2] !== undefined){
+							console.log('hsv update', newval, oldval);
+							palette.color({h: newval[0], s: newval[1], v: newval[2]});
+						}
+					});
+					$scope.$watchGroup(['color.r','color.g','color.b'], function(newval, oldval){
+						if(newval[0] !== undefined || newval[1] !== undefined || newval[2] !== undefined){
+							console.log('rgb update', newval, oldval);
+							palette.color({r: newval[0], g: newval[1], b: newval[2]});
+						}
+					});
+					$scope.$watch('color.a', function(newval, oldval){
+						if(newval !== undefined){
+							console.log('a update', newval, oldval);
+							palette.color({a: newval});
+						}
+					});
+					$scope.$watch('color.hex', function(newval, oldval){
+						if(newval !== undefined){
+							console.log('hex update', newval, oldval);
 							palette.color(newval);
 						}
 					});
