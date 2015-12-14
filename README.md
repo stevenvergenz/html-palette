@@ -44,7 +44,7 @@ angular.module('myApp', ['html-palette'])
 ```html
 <div ng-app='myApp'>
 	<div ng-controller='MyController'>
-		<html-palette rgb-color='color'></html-color>
+		<html-palette color='color'></html-color>
 	</div>
 </div>
 ```
@@ -87,6 +87,7 @@ The constructor for HtmlPalette has three versions, depending on what library yo
 	```javascript
 	angular.module('my-app', ['html-palette'])
 	.controller('MyController', function($scope){
+		$scope.myColor = {hex: 'deadbe', a: 0xef/0xff};
 		$scope.$watch('myColor', function(newval){
 			console.log('You have selected the color', newval);
 		});
@@ -95,7 +96,7 @@ The constructor for HtmlPalette has three versions, depending on what library yo
 
 	```html
 	<div ng-controller='MyController'>
-		<html-palette hex-color='myColor' popup-edge='nw'></html-palette>
+		<html-palette color='myColor' popup-edge='nw'></html-palette>
 	</div>
 	```
 
@@ -124,8 +125,18 @@ A function called when the selected color changes, either from picker events or 
 
 In addition to the raw color values listed above, the callback argument provides two other properties:
 
-* `css` - A string representing the given color using the CSS `rgba` function. E.g. `"rgba(200, 100, 50, 1.0)"`. This is provided because the `hex` format doesn't include the alpha channel.
+* `css` - A string representing the given color using the CSS `rgba` function. E.g. `"rgba(200, 100, 50, 1.0)"`. This is provided because the `hex` format doesn't support the alpha channel.
 * `background` - A CSS string representing the given color composed over a grey and white checked background for alpha visualization. Useful for color preview purposes.
+
+### colorSelectCallback
+
+*Type*: `function(color)`
+
+*Default*: `null`
+
+A function called when the selected color is no longer changing, either because it was an instantaneous (i.e. programmatic) change, or because the user has stopped interacting with the picker. This function's argument is identical to that of `colorCallback`.
+
+In the included Angular.js binding, this option is available as the attribute 'on-color-select', whose value expression is evaluated in the previously mentioned circumstances.
 
 ### disabled
 
@@ -181,7 +192,7 @@ The initial color selection of the picker. The color callback will be called onc
 
 *Default*: `false`
 
-If specified, the widget controls will include a slider for the alpha channel.
+If specified, the widget controls will include a slider for the alpha channel. This might require changing the dimensions of the popup via the `css` property for a good user experience.
 
 ### throttleApply (Angular.js attribute only)
 
@@ -189,7 +200,7 @@ If specified, the widget controls will include a slider for the alpha channel.
 
 *Default*: `0`
 
-Will not apply the widget's color to the bound model unless the color is unchanged for *throttleApply* milliseconds.
+The Angular.js directive will set the values of the bound object, but will not call `$apply` until the color is unchanged for *throttleApply* milliseconds.
 
 ## Other Instance Properties
 

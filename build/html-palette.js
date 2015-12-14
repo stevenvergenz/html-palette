@@ -258,7 +258,7 @@
 						self.color({h: hue, s: Math.min(sat, 1.0)});
 				}
 				else if( evt.screenX !== 0 || evt.screenY !== 0 )
-					self.color({h: Math.min(1, Math.max(0, (evt.offsetX-1)/paletteWidth)), s: Math.min(1, Math.max(0, (h-evt.offsetY+1)/(h-1)))});	
+					self.color({h: Math.min(1, Math.max(0, (evt.offsetX-1)/paletteWidth)), s: Math.min(1, Math.max(0, (h-evt.offsetY+1)/(h-1)))});
 			}
 
 			oneaxis.ondragstart = function(evt){
@@ -489,7 +489,10 @@
 			{
 				PalettePopup.triggerElem = self.triggerElem;
 				PalettePopup.colorCallback = self.color.bind(self);
-				PalettePopup.colorSelectCallback = self.colorSelectCallback;
+				PalettePopup.colorSelectCallback = function(color){
+					if(self.colorSelectCallback)
+						self.colorSelectCallback(JSON.parse(JSON.stringify(color)));
+				};
 
 				PalettePopup.show({
 					radial: self.radial,
@@ -502,7 +505,7 @@
 		});
 	}
 
-	Trigger.prototype.color = function(val)
+	Trigger.prototype.color = function(val, isAngular)
 	{
 		if(val === undefined)
 			return this.selection;
@@ -523,7 +526,7 @@
 			}
 
 			if(this.colorCallback){
-				this.colorCallback(JSON.parse(JSON.stringify(this.selection)));
+				this.colorCallback(JSON.parse(JSON.stringify(this.selection)), isAngular);
 			}
 		}
 	}
@@ -647,6 +650,9 @@
 				},
 				link: function($scope, elem, attrs)
 				{
+					var throttleTimeout = null;
+					
+					attrs.initialColor = $scope.color;
 					var palette = new Trigger(elem[0], attrs);
 
 					$scope.$watch('radial', function(newval){
@@ -669,34 +675,38 @@
 						$scope.onColorSelect && $scope.onColorSelect({color: color});
 					};
 
-					palette.colorCallback = function(color){
+					palette.colorCallback = function(color, isAngular){
 						for(var i in color)
 							$scope.color[i] = color[i];
-						//$scope.$apply();
+						if(!isAngular){
+							if(attrs.throttleApply){
+								if(throttleTimeout) $timeout.cancel(throttleTimeout);
+								throttleTimeout = $timeout($scope.$apply.bind($scope), attrs.throttleApply || 0);
+							}
+							else {
+								$scope.$apply();
+							}
+						}
 					};
 
 					$scope.$watchGroup(['color.h','color.s','color.v'], function(newval, oldval){
-						if(newval[0] !== undefined || newval[1] !== undefined || newval[2] !== undefined){
-							console.log('hsv update', newval, oldval);
-							palette.color({h: newval[0], s: newval[1], v: newval[2]});
+						if(newval[0] !== palette.selection.h || newval[1] !== palette.selection.s || newval[2] !== palette.selection.v){
+							palette.color({h: newval[0], s: newval[1], v: newval[2]}, true);
 						}
 					});
 					$scope.$watchGroup(['color.r','color.g','color.b'], function(newval, oldval){
-						if(newval[0] !== undefined || newval[1] !== undefined || newval[2] !== undefined){
-							console.log('rgb update', newval, oldval);
-							palette.color({r: newval[0], g: newval[1], b: newval[2]});
+						if(newval[0] !== palette.selection.r || newval[1] !== palette.selection.g || newval[2] !== palette.selection.b){
+							palette.color({r: newval[0], g: newval[1], b: newval[2]}, true);
 						}
 					});
 					$scope.$watch('color.a', function(newval, oldval){
-						if(newval !== undefined){
-							console.log('a update', newval, oldval);
-							palette.color({a: newval});
+						if(newval !== palette.selection.a){
+							palette.color({a: newval}, true);
 						}
 					});
 					$scope.$watch('color.hex', function(newval, oldval){
-						if(newval !== undefined){
-							console.log('hex update', newval, oldval);
-							palette.color(newval);
+						if(newval !== palette.selection.hex){
+							palette.color(newval, true);
 						}
 					});
 
