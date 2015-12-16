@@ -82,7 +82,7 @@ The constructor for HtmlPalette has three versions, depending on what library yo
 
 * **Angular.js**:
 
-	The picker takes the form of a directive, so you can add it straight into your HTML, no Javascript required. The scope variable referred to by one of the attributes `hsv-color`, `rgb-color`, or `hex-color` (use only one) is bi-directionally bound to the picker's selected color, in the format specified by the attribute. Note that an alpha value is only supplied to the RGB and HSV versions, not hex. Additional picker attributes are mapped to options in the usual Angular fashion: hyphenated to camel-case.
+	The picker takes the form of a directive, so you can add it straight into your HTML, no Javascript required. The scope variable referred to by the attribute `color` is bi-directionally bound to the picker's selected color, in the format specified by the `color-profile` attribute. Note that an alpha value is only available to the RGB and HSV versions, not hex. Additional picker attributes are mapped to options in the usual Angular fashion: hyphenated to camel-case.
 
 	```javascript
 	angular.module('my-app', ['html-palette'])
@@ -144,7 +144,7 @@ In the included Angular.js binding, this option is available as the attribute 'o
 
 *Default*: `false`
 
-When disabled the trigger will not bring up the color picker when clicked.
+When disabled the trigger will not bring up the color picker when clicked. In the Angular.js binding, this is a watched expression.
 
 ### popupEdge
 
@@ -201,6 +201,14 @@ If specified, the widget controls will include a slider for the alpha channel. T
 *Default*: `0`
 
 The Angular.js directive will set the values of the bound object, but will not call `$apply` until the color is unchanged for *throttleApply* milliseconds.
+
+### colorProfile (Angular.js attribute only)
+
+*Type*: `String`
+
+*Default*: `undefined`
+
+This attribute controls which color properties are copied over to the bound model. If the attribute is a string of any of the letters `h,s,v,r,g,b,a`, then the corresponding color fields will be copied. If it is the string `hex`, then only the hex representation will be copied. Otherwise, all color attributes (`h,s,v,r,g,b,a,hex,css,background`) are copied.
 
 ## Other Instance Properties
 
