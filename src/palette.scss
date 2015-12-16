@@ -26,7 +26,7 @@ html-palette, .html-palette
 	{
 		position: relative;
 		padding: 1px;
-		@include flex-grow(1);
+		@include flex(1);
 
 		.twoaxis, .oneaxis, .alpha
 		{
@@ -61,7 +61,7 @@ html-palette, .html-palette
 	{
 		//margin-top: 5px;
 		height: 30px;
-		@include flex-shrink(0);
+		min-height: 30px;
 
 		@include display-flex();
 		@include flex-direction(row);

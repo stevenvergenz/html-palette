@@ -97,6 +97,13 @@ $mobile-width: 700px;
 	align-items: $align;
 }
 
+@mixin flex($factor)
+{
+	-ms-flex: $factor;
+	-webkit-flex: $factor;
+	flex: $factor;
+}
+
 @mixin flex-shrink($factor)
 {
 	-moz-flex-shrink: $factor;
@@ -108,7 +115,6 @@ $mobile-width: 700px;
 @mixin flex-grow($factor)
 {
 	-moz-flex-grow: $factor;
-	-ms-flex: $factor $factor;
 	-webkit-flex-grow: $factor;
 	flex-grow: $factor;
 }
@@ -116,7 +122,6 @@ $mobile-width: 700px;
 @mixin flex-basis($factor)
 {
 	-moz-flex-basis: $factor;
-	-ms-flex: 0 1 $factor;
 	-webkit-flex-basis: $factor;
 	flex-basis: $factor;
 }
